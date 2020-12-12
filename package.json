@@ -1,5 +1,5 @@
 {
-  "name": "sofa",
+  "name": "sauxfas",
   "version": "0.0.1",
   "description": "A lightweight fetch wrapper on the couchdb api",
   "module": "dist/index.mjs",
