@@ -1,0 +1,4 @@
+node_modules
+dist
+bin
+src/*.d.ts
