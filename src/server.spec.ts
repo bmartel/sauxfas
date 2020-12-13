@@ -578,6 +578,49 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
     t.is(spy.data.options.method, RequestMethod.Get);
   });
 
+  test(message("read calls GET with job id"), async (t) => {
+    const serverInstance = server(baseUri);
+    request.callsFake(resolveRequest());
+
+    const id = "foo";
+
+    const { spy } = (await serverInstance.reshard().jobs(id).read()) as any;
+
+    t.is(spy.data.uri, `${baseUri}${nsUri}/${id}`);
+    t.is(spy.data.options.method, RequestMethod.Get);
+  });
+
+  test(message("read calls GET with job id in read params"), async (t) => {
+    const serverInstance = server(baseUri);
+    request.callsFake(resolveRequest());
+
+    const opts = { id: "foo" };
+
+    const { spy } = (await serverInstance.reshard().jobs().read(opts)) as any;
+
+    t.is(spy.data.uri, `${baseUri}${nsUri}/${opts.id}`);
+    t.is(spy.data.options.method, RequestMethod.Get);
+  });
+
+  test(
+    message("read calls GET with job id in read params over the base job id"),
+    async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const id = "bar";
+      const opts = { id: "foo" };
+
+      const { spy } = (await serverInstance
+        .reshard()
+        .jobs(id)
+        .read(opts)) as any;
+
+      t.is(spy.data.uri, `${baseUri}${nsUri}/${opts.id}`);
+      t.is(spy.data.options.method, RequestMethod.Get);
+    }
+  );
+
   test(message("create calls POST"), async (t) => {
     const serverInstance = server(baseUri);
     request.callsFake(resolveRequest());
