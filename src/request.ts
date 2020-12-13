@@ -65,7 +65,7 @@ export type Copy<T = any> = (options: {
 }) => Promise<OkResult<T> | ErrorResult>;
 
 export type Post<T = any, O = any> = (
-  options: PostOptions<
+  options?: PostOptions<
     O & {
       id?: DocId;
       rev?: RevId;
@@ -77,7 +77,7 @@ export type Post<T = any, O = any> = (
 export type Put<T = any, O = any> = Post<T, O>;
 
 export type Destroy<T = any> = (
-  options: {
+  options?: {
     id: DocId;
     rev?: RevId;
   } & {
