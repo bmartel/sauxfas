@@ -13,6 +13,7 @@ import { SchedulerDocOptions, SchedulerJobOptions } from "./scheduler";
 import { SearchAnalyzeOptions } from "./search";
 import { ReshardJobCreateOptions } from "./reshard";
 import { RequestMethod } from "./request";
+import { NodeConfigUpdateOptions } from "./node";
 
 const baseUri = "http://localhost";
 
@@ -743,5 +744,136 @@ resourceGroup(
       t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", "_local")}`);
       t.is(spy.data.options.method, RequestMethod.Get);
     });
+
+    test(message("reload calls POST with node name"), async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const { spy } = (await serverInstance.node().config().reload()) as any;
+
+      t.is(
+        spy.data.uri,
+        `${baseUri}${nsUri.replace("{node}", "_local")}/_reload`
+      );
+      t.is(spy.data.options.method, RequestMethod.Post);
+    });
+  }
+);
+
+resourceGroup(
+  "server::node::config",
+  "section",
+  "/_node/{node}/_config/{section}",
+  (message, nsUri) => {
+    test(message("read calls GET with node name and section"), async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const section = "foo";
+      const { spy } = (await serverInstance
+        .node()
+        .config()
+        .section(section)
+        .read()) as any;
+
+      t.is(
+        spy.data.uri,
+        `${baseUri}${nsUri
+          .replace("{node}", "_local")
+          .replace("{section}", section)}`
+      );
+      t.is(spy.data.options.method, RequestMethod.Get);
+    });
+  }
+);
+
+resourceGroup(
+  "server::node::config::section",
+  "key",
+  "/_node/{node}/_config/{section}/{key}",
+  (message, nsUri) => {
+    test(
+      message("read calls GET with node name, section and key"),
+      async (t) => {
+        const serverInstance = server(baseUri);
+        request.callsFake(resolveRequest());
+
+        const section = "foo";
+        const key = "bar";
+
+        const { spy } = (await serverInstance
+          .node()
+          .config()
+          .section(section)
+          .key(key)
+          .read()) as any;
+
+        t.is(
+          spy.data.uri,
+          `${baseUri}${nsUri
+            .replace("{node}", "_local")
+            .replace("{section}", section)
+            .replace("{key}", key)}`
+        );
+        t.is(spy.data.options.method, RequestMethod.Get);
+      }
+    );
+
+    test(
+      message("update calls PUT with node name, section and key"),
+      async (t) => {
+        const serverInstance = server(baseUri);
+        request.callsFake(resolveRequest());
+
+        const section = "foo";
+        const key = "bar";
+
+        const opts: NodeConfigUpdateOptions = { data: "baz" };
+
+        const { spy } = (await serverInstance
+          .node()
+          .config()
+          .section(section)
+          .key(key)
+          .update(opts)) as any;
+
+        t.is(
+          spy.data.uri,
+          `${baseUri}${nsUri
+            .replace("{node}", "_local")
+            .replace("{section}", section)
+            .replace("{key}", key)}`
+        );
+        t.is(spy.data.options.method, RequestMethod.Put);
+        t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+      }
+    );
+
+    test(
+      message("destroy calls DELETE with node name, section and key"),
+      async (t) => {
+        const serverInstance = server(baseUri);
+        request.callsFake(resolveRequest());
+
+        const section = "foo";
+        const key = "bar";
+
+        const { spy } = (await serverInstance
+          .node()
+          .config()
+          .section(section)
+          .key(key)
+          .destroy()) as any;
+
+        t.is(
+          spy.data.uri,
+          `${baseUri}${nsUri
+            .replace("{node}", "_local")
+            .replace("{section}", section)
+            .replace("{key}", key)}`
+        );
+        t.is(spy.data.options.method, RequestMethod.Delete);
+      }
+    );
   }
 );
