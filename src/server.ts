@@ -17,6 +17,7 @@ import {
   SchedulerJobOptions,
   SchedulerJobResult,
 } from "./scheduler";
+import { SearchAnalyzeOptions, SearchAnalyzeResult } from "./search";
 
 export interface ServerOperations {
   read: Get;
@@ -32,6 +33,7 @@ export interface ServerOperations {
     jobs: Get;
     docs: Get;
   };
+  searchAnalyze: Post;
 }
 
 export const server = (uri: string): ServerOperations => ({
@@ -71,4 +73,9 @@ export const server = (uri: string): ServerOperations => ({
       },
     };
   },
+  searchAnalyze: (options: SearchAnalyzeOptions) =>
+    post<SearchAnalyzeResult, SearchAnalyzeOptions>(
+      `${uri}/_search_analyze`,
+      options
+    ),
 });

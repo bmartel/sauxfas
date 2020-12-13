@@ -10,6 +10,7 @@ import {
 import { UuidOptions } from "./internal";
 import { ReplicateOptions } from "./replication";
 import { SchedulerDocOptions, SchedulerJobOptions } from "./scheduler";
+import { SearchAnalyzeOptions } from "./search";
 
 const baseUri = "http://localhost";
 
@@ -497,4 +498,22 @@ test("server: scheduler docs calls with replicator with slashes in the name, doc
     }&skip=${opts.query!.skip}`
   );
   t.is(spy.data.options.method, "GET");
+});
+
+test("server: searchAnalyze calls POST at /_search_analyze with data params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SearchAnalyzeOptions = {
+    data: {
+      field: "english",
+      text: "running",
+    },
+  };
+  const { spy } = await serverInstance.searchAnalyze(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_search_analyze`);
+  t.is(spy.data.options.method, "POST");
+  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
