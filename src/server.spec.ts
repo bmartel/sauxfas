@@ -655,3 +655,50 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
     t.is(spy.data.options.method, RequestMethod.Delete);
   });
 });
+
+resourceGroup(
+  "server::reshard::jobs",
+  "state",
+  "/_reshard/jobs/{jobid}/state",
+  (message, nsUri) => {
+    test(message("read calls GET with job id"), async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const id = "foo";
+
+      const { spy } = (await serverInstance
+        .reshard()
+        .jobs(id)
+        .state()
+        .read()) as any;
+
+      t.is(spy.data.uri, `${baseUri}${nsUri.replace("{jobid}", id)}`);
+      t.is(spy.data.options.method, RequestMethod.Get);
+    });
+
+    test(message("update calls PUT with job id"), async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const id = "foo";
+
+      const opts = {
+        data: {
+          state: "stopped",
+          state_reason: "stopped abruptly due to external factors",
+        },
+      };
+
+      const { spy } = (await serverInstance
+        .reshard()
+        .jobs(id)
+        .state()
+        .update(opts)) as any;
+
+      t.is(spy.data.uri, `${baseUri}${nsUri.replace("{jobid}", id)}`);
+      t.is(spy.data.options.method, RequestMethod.Put);
+      t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+    });
+  }
+);

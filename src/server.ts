@@ -39,7 +39,11 @@ export interface ServerOperations {
   reshard: () => {
     read: Get;
     state: () => Pick<Manager<any>, "read" | "update">;
-    jobs: (id?: string) => Omit<Manager<SchedulerJob>, "update">;
+    jobs: (
+      id?: string
+    ) => Omit<Manager<SchedulerJob>, "update"> & {
+      state: () => Pick<Manager<any>, "read" | "update">;
+    };
   };
 }
 
@@ -110,6 +114,16 @@ export const server = (uri: string): ServerOperations => ({
           create: (options) =>
             create({ method: RequestMethod.Post, ...options }),
           destroy,
+          state: () => {
+            const { read, create: update } = resource(
+              `${reshardUri}/jobs/${id}/state`
+            );
+            return {
+              read,
+              update: (options) =>
+                update({ method: RequestMethod.Put, ...options }),
+            };
+          },
         };
       },
     };
