@@ -1,5 +1,11 @@
 import { ClusterSetupOptions, ClusterSetupStatusOptions } from "./cluster";
-import { AllDbOptions, DbInfo, DbInfoOptions } from "./db";
+import {
+  AllDbOptions,
+  DbInfo,
+  DbInfoOptions,
+  DbUpdateOptions,
+  DbUpdateResult,
+} from "./db";
 import { DocId } from "./internal";
 import { Manager } from "./manager";
 import { ActiveTask, ReplicateOptions, Replication } from "./replication";
@@ -12,6 +18,7 @@ export interface ServerOperations {
   replicate: Post;
   activeTasks: Get;
   allDbs: Get;
+  dbUpdates: Get;
   dbsInfo: Post;
   clusterSetup: () => Pick<Manager<any>, "read" | "create">;
 }
@@ -28,6 +35,8 @@ export const server = (uri: string): ServerOperations => ({
       create: (options: ClusterSetupOptions) => create(options),
     };
   },
+  dbUpdates: (options?: DbUpdateOptions) =>
+    get<DbUpdateResult, DbUpdateOptions>(`${uri}/_db_updates`, options!),
   dbsInfo: (options?: DbInfoOptions) =>
     post<Array<DbInfo>, DbInfoOptions>(`${uri}/_dbs_info`, options!),
   uuid: (count = 1) =>

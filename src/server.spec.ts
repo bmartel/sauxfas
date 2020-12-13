@@ -1,7 +1,7 @@
 import test from "ava";
 import { request, resolveRequest } from "./spec.helper";
 import { server } from "./server";
-import { AllDbOptions, DbInfoOptions } from "./db";
+import { AllDbOptions, DbFeed, DbInfoOptions, DbUpdateOptions } from "./db";
 import {
   ClusterSetupAction,
   ClusterSetupOptions,
@@ -167,4 +167,37 @@ test("server: clusterSetup create calls with query params", async (t) => {
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
   t.is(spy.data.options.method, "POST");
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
+
+test("server: dbUpdates read calls GET at /_db_updates", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.dbUpdates();
+
+  t.is(spy.data.uri, `${baseUri}/_db_updates`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: dbUpdates read calls with query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: DbUpdateOptions = {
+    query: {
+      feed: DbFeed.Normal,
+      timeout: 60,
+      heartbeat: 60000,
+      since: "now",
+    },
+  };
+  const { spy } = await serverInstance.dbUpdates(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_db_updates?feed=${opts.query.feed}&timeout=${opts.query.timeout}&heartbeat=${opts.query.heartbeat}&since=${opts.query.since}`
+  );
+  t.is(spy.data.options.method, "GET");
 });

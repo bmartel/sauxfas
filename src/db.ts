@@ -5,6 +5,18 @@ import { get, Get, post } from "./request";
 import { resource } from "./resource";
 import { DesignDoc } from "./view";
 
+export enum DbFeed {
+  Normal = "normal",
+  Longpoll = "longpoll",
+  Continuous = "continuous",
+  Eventsource = "eventsource",
+}
+export enum DbEvent {
+  Created = "created",
+  Updated = "updated",
+  Destroyed = "deleted",
+}
+
 export interface DbInfo {
   key: string;
   info: {
@@ -46,6 +58,24 @@ export interface AllDbOptions {
     startkey?: string;
     start_key?: string;
   };
+}
+
+export interface DbUpdateOptions {
+  query: {
+    feed?: DbFeed;
+    timeout?: number;
+    heartbeat?: number;
+    since?: string;
+  };
+}
+
+export interface DbUpdateResult {
+  results: Array<{
+    db_name: string;
+    type: DbEvent;
+    seq: string;
+  }>;
+  last_seq: string;
 }
 
 export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
