@@ -12,11 +12,7 @@ export interface ServerOperations {
   dbsInfo: Post;
 }
 
-// users(): DocManager<User>;
-// session(): Omit<Manager<Doc<UserContext>>, "update">;
-// db<T = any>(name: string): DbManager<T>;
-
-export const server = (uri: string) => ({
+export const server = (uri: string): ServerOperations => ({
   read: () => get(uri, {}),
   activeTasks: () => get<Array<ActiveTask>>(`${uri}/_active_tasks`, {}),
   allDbs: (options?: AllDbOptions) =>

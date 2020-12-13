@@ -96,11 +96,13 @@ export type FetchRequest<T = any> = (
   }
 ) => Promise<OkResult<T> | ErrorResult>;
 
-export const query = (uri: string, options = {}) =>
-  `${uri}?${(Object as any)
+export const query = (uri: string, options = {}) => {
+  const values = (Object as any)
     .entries(options)
     .map(([key, option]: Array<any>) => `${key}=${encodeURIComponent(option)}`)
-    .join("&")}`;
+    .join("&");
+  return `${uri}${values ? `?${values}` : ""}`;
+};
 
 export const appendPath = (
   uri: string,
@@ -141,8 +143,8 @@ export const request: FetchRequest = (
       : data || undefined,
   }).then(async (res) => {
     const useJson =
-      (headers as any)["content-type"] === "application/json" ||
-      method !== "GET";
+      ((headers as any)["content-type"] || "application/json") ===
+        "application/json" || method !== "GET";
     if (!res.ok) {
       if (useJson) {
         const error = await res.json();
