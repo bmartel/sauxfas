@@ -8,9 +8,18 @@ import {
 } from "./db";
 import { DocId, Empty, UuidOptions } from "./internal";
 import { Manager } from "./manager";
-import { NodeStatOptions } from "./node";
+import { NodeConfigUpdateOptions, NodeStatOptions } from "./node";
 import { ActiveTask, ReplicateOptions, Replication } from "./replication";
-import { appendPath, get, Get, post, Post, RequestMethod } from "./request";
+import {
+  appendPath,
+  Destroy,
+  get,
+  Get,
+  post,
+  Post,
+  Put,
+  RequestMethod,
+} from "./request";
 import { idResource, resource } from "./resource";
 import {
   SchedulerDocOptions,
@@ -52,6 +61,22 @@ export interface ServerOperations {
     read: Get;
     stats: Get;
     system: Get;
+    config: () => {
+      read: Get;
+      reload: Post;
+      section: (
+        name: string
+      ) => {
+        read: Get;
+        key: (
+          name: string
+        ) => {
+          read: Get;
+          update: Put;
+          destroy: Destroy;
+        };
+      };
+    };
   };
 }
 
@@ -146,6 +171,30 @@ export const server = (uri: string): ServerOperations => ({
           options
         ),
       system: () => get<any, Empty>(`${nodeUri}/_system`, {}),
+      config: () => {
+        const configUri = `${nodeUri}/_config`;
+        return {
+          read: () => get<any, Empty>(configUri, {}),
+          reload: () => post<any, Empty>(`${configUri}/_reload`, {}),
+          section: (section: string) => {
+            const sectionUri = `${configUri}/${section}`;
+            return {
+              read: () => get<any, Empty>(sectionUri, {}),
+              key: (key: string) => {
+                const { read, create: update, destroy } = resource(
+                  `${sectionUri}/${key}`
+                );
+                return {
+                  read,
+                  update: (options: NodeConfigUpdateOptions) =>
+                    update({ method: RequestMethod.Put, ...options }),
+                  destroy,
+                };
+              },
+            };
+          },
+        };
+      },
     };
   },
 });

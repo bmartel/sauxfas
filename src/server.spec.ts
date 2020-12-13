@@ -728,3 +728,20 @@ resourceGroup("server", "node", "/_node/{node}", (message, nsUri) => {
     t.is(spy.data.options.method, RequestMethod.Get);
   });
 });
+
+resourceGroup(
+  "server::node",
+  "config",
+  "/_node/{node}/_config",
+  (message, nsUri) => {
+    test(message("read calls GET with node name"), async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const { spy } = (await serverInstance.node().config().read()) as any;
+
+      t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", "_local")}`);
+      t.is(spy.data.options.method, RequestMethod.Get);
+    });
+  }
+);
