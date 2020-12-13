@@ -1,5 +1,4 @@
 import { DbInfo } from "./db";
-import { DocId } from "./doc";
 import { RequestMethod } from "./request";
 import { Roles } from "./user";
 
@@ -37,3 +36,14 @@ export interface InternalRequestObject {
   userCtx: UserContextObject;
   uuid: string;
 }
+
+export type DocId = string;
+
+export type DocIdFunc<T> = (doc: T) => string;
+
+export const idFromDoc = <T>(
+  doc: T,
+  id?: DocId | DocIdFunc<T>
+): DocId | undefined => {
+  return typeof id === "function" ? id(doc) : id;
+};

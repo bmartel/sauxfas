@@ -1,6 +1,8 @@
-import { DocId, DocManager } from "./doc";
+import { doc, DocManager } from "./doc";
+import { DocId } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
-import { Get } from "./request";
+import { get, Get, post } from "./request";
+import { resource } from "./resource";
 import { DesignDoc } from "./view";
 
 export interface DbInfo {
@@ -52,4 +54,26 @@ export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   index(): Pick<Manager<{}>, "read" | "create">;
   allDocs: Get;
   designDocs: Get<Array<DesignDoc>>;
+};
+
+export type DbResource<T = any> = (name: string) => DbManager<T>;
+
+export interface DbOperations {
+  db<T = any>(name: string): DbManager<T>;
+}
+
+export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
+  const dbUri = `${uri}/${name}`;
+  const { read, create, destroy } = resource(dbUri);
+  return {
+    read,
+    create: (options) => create({ ...options, method: "PUT" }),
+    destroy,
+    allDocs: (options = {}) => get(`${dbUri}/_all_docs`, options),
+    designDocs: (options = {}) => get(`${dbUri}/_design_docs`, options),
+    find: (options: any = {}) => post(`${dbUri}/_find`, options),
+    index: () => resource(`${dbUri}/_index`),
+    doc: doc(dbUri),
+    designDoc: doc<DesignDoc>(`${dbUri}/_design`),
+  };
 };

@@ -1,4 +1,5 @@
-import { DocId, RevId } from "./doc";
+import { RevId } from "./doc";
+import { DocId } from "./internal";
 
 export type ErrorResult = {
   status: number;

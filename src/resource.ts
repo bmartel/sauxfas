@@ -1,4 +1,4 @@
-import { DocId, DocIdFunc, idFromDoc } from "./doc";
+import { DocId, DocIdFunc, idFromDoc } from "./internal";
 import { Manager } from "./manager";
 import { appendPath, query, request } from "./request";
 

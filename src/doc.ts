@@ -1,9 +1,8 @@
 import { attachment, Attachment, AttachmentList } from "./attachment";
+import { DocId, DocIdFunc } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
 import { Copy, request, query } from "./request";
 import { idResource } from "./resource";
-
-export type DocId = string;
 
 export type RevId = string;
 
@@ -55,14 +54,6 @@ export interface DocOptions {
 export type DocManager<T = any> = Manager<Doc<T>> & {
   copy: Copy<Doc<T>>;
   attachment(file: string): ManagerWithMetaRead<Doc<Attachment>>;
-};
-export type DocIdFunc<T> = (doc: T) => string;
-
-export const idFromDoc = <T>(
-  doc: T,
-  id?: DocId | DocIdFunc<T>
-): DocId | undefined => {
-  return typeof id === "function" ? id(doc) : id;
 };
 
 export const doc = <T = any>(uri: string) => <D = T>(

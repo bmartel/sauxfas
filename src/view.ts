@@ -1,5 +1,5 @@
-import { Doc, DocId } from "./doc";
-import { SecurityObject, UserContextObject } from "./internal";
+import { Doc } from "./doc";
+import { DocId, SecurityObject, UserContextObject } from "./internal";
 
 export type ViewKey =
   | string
