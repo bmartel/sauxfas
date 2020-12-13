@@ -642,4 +642,16 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
     t.is(spy.data.options.method, RequestMethod.Post);
     t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
   });
+
+  test(message("destroy calls DELETE with job id"), async (t) => {
+    const serverInstance = server(baseUri);
+    request.callsFake(resolveRequest());
+
+    const id = "foo";
+
+    const { spy } = (await serverInstance.reshard().jobs(id).destroy()) as any;
+
+    t.is(spy.data.uri, `${baseUri}${nsUri}/${id}`);
+    t.is(spy.data.options.method, RequestMethod.Delete);
+  });
 });
