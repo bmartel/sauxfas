@@ -7,6 +7,9 @@ import {
   ClusterSetupOptions,
   ClusterSetupStatusOptions,
 } from "./cluster";
+import { UuidOptions } from "./internal";
+import { ReplicateOptions } from "./replication";
+import { SchedulerDocOptions, SchedulerJobOptions } from "./scheduler";
 
 const baseUri = "http://localhost";
 
@@ -198,6 +201,300 @@ test("server: dbUpdates read calls with query params", async (t) => {
   t.is(
     spy.data.uri,
     `${baseUri}/_db_updates?feed=${opts.query.feed}&timeout=${opts.query.timeout}&heartbeat=${opts.query.heartbeat}&since=${opts.query.since}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: membership calls GET at /_membership", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.membership();
+
+  t.is(spy.data.uri, `${baseUri}/_membership`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: uuids calls GET at /_uuids", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.uuids();
+
+  t.is(spy.data.uri, `${baseUri}/_uuids`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: uuids calls with query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  const opts: UuidOptions = {
+    query: {
+      count: 2,
+    },
+  };
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.uuids(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_uuids?count=${opts.query.count}`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: replicate calls POST at /_replicate with data params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: ReplicateOptions = {
+    data: {
+      source: "1.1.1.1:5984",
+      target: "1.1.2.2:5984",
+      filter: "somefilterfunc",
+      doc_ids: ["a", "b", "c"],
+      cancel: false,
+      continuous: true,
+      create_target: true,
+    },
+  };
+  const { spy } = await serverInstance.replicate(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_replicate`);
+  t.is(spy.data.options.method, "POST");
+  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
+
+test("server: scheduler jobs calls GET at /_scheduler/_jobs", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.scheduler().jobs();
+
+  t.is(spy.data.uri, `${baseUri}/_scheduler/_jobs`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler jobs calls with query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerJobOptions = {
+    query: {
+      limit: 10,
+      skip: 10,
+    },
+  };
+
+  const { spy } = await serverInstance.scheduler().jobs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_jobs?limit=${opts.query.limit}&skip=${opts.query.skip}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls GET at /_scheduler/_docs", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.scheduler().docs();
+
+  t.is(spy.data.uri, `${baseUri}/_scheduler/_docs`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    query: {
+      limit: 10,
+      skip: 10,
+    },
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs?limit=${opts.query!.limit}&skip=${
+      opts.query!.skip
+    }`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo",
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_scheduler/_docs/${opts.replicator}`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator with slashes in the name", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo/bar",
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_scheduler/_docs/${opts.replicator}`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator and query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo",
+    query: {
+      limit: 10,
+      skip: 10,
+    },
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs/${opts.replicator}?limit=${
+      opts.query!.limit
+    }&skip=${opts.query!.skip}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator with slashes in the name and query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo/bar",
+    query: {
+      limit: 10,
+      skip: 10,
+    },
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs/${opts.replicator}?limit=${
+      opts.query!.limit
+    }&skip=${opts.query!.skip}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator and doc id", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo",
+    id: "bar",
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs/${opts.replicator}/${opts.id}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator with slashes in the name and doc id", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo/bar",
+    id: "baz",
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs/${opts.replicator}/${opts.id}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator, doc id and query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo",
+    id: "bar",
+    query: {
+      limit: 10,
+      skip: 10,
+    },
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs/${opts.replicator}/${opts.id}?limit=${
+      opts.query!.limit
+    }&skip=${opts.query!.skip}`
+  );
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: scheduler docs calls with replicator with slashes in the name, doc id and query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: SchedulerDocOptions = {
+    replicator: "foo/bar",
+    id: "baz",
+    query: {
+      limit: 10,
+      skip: 10,
+    },
+  };
+
+  const { spy } = await serverInstance.scheduler().docs(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_scheduler/_docs/${opts.replicator}/${opts.id}?limit=${
+      opts.query!.limit
+    }&skip=${opts.query!.skip}`
   );
   t.is(spy.data.options.method, "GET");
 });

@@ -26,24 +26,31 @@ export const idResource = <T = any>(
   eid?: DocId | DocIdFunc<T>
 ): Manager<T> => ({
   read: ({ id = eid, method = "GET", ...options } = {} as any) =>
-    request(query(appendPath(uri, [idFromDoc(id)]), options.query), {
-      method,
-      ...options,
-    }),
-  create: ({ id = eid, data, method = "PUT", ...options }) =>
-    request(appendPath(uri, [idFromDoc(id)]), {
-      method,
-      data: data as any,
-      ...options,
-    }),
-  update: ({ id = eid, rev, data, method = "PUT", ...options }) =>
-    request(query(appendPath(uri, [idFromDoc(id)]), { rev }), {
+    request(
+      query(appendPath(uri, [idFromDoc(options.query, id)]), options.query),
+      {
+        method,
+        ...options,
+      }
+    ),
+  create: ({ id = eid, data, form, method = "PUT", ...options }) =>
+    request(appendPath(uri, [idFromDoc(form || data, id)]), {
       method,
       data: data as any,
+      form: form as any,
+      raw: !!form,
       ...options,
     }),
-  destroy: ({ id = eid, rev, ...options }) =>
-    request(query(appendPath(uri, [idFromDoc(id)]), { rev }), {
+  update: ({ id = eid, rev, data, form, method = "PUT", ...options }) =>
+    request(query(appendPath(uri, [idFromDoc(form || data, id)]), { rev }), {
+      method,
+      data: data as any,
+      form: form as any,
+      raw: !!form,
+      ...options,
+    }),
+  destroy: ({ id = eid, data, rev, ...options }) =>
+    request(query(appendPath(uri, [idFromDoc(data, id)]), { rev }), {
       method: "DELETE",
       ...options,
     }),

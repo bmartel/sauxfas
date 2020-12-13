@@ -2,6 +2,12 @@ import { DbInfo } from "./db";
 import { RequestMethod } from "./request";
 import { Roles } from "./user";
 
+export interface UuidOptions {
+  query: {
+    count?: number;
+  };
+}
+
 export interface SecurityObject {
   admins: {
     names: Array<string>;
