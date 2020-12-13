@@ -702,3 +702,29 @@ resourceGroup(
     });
   }
 );
+
+resourceGroup("server", "node", "/_node/{node}", (message, nsUri) => {
+  test(
+    message("read calls GET with _local as default node name"),
+    async (t) => {
+      const serverInstance = server(baseUri);
+      request.callsFake(resolveRequest());
+
+      const { spy } = (await serverInstance.node().read()) as any;
+
+      t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", "_local")}`);
+      t.is(spy.data.options.method, RequestMethod.Get);
+    }
+  );
+  test(message("read calls GET with node name"), async (t) => {
+    const serverInstance = server(baseUri);
+    request.callsFake(resolveRequest());
+
+    const node = "foo";
+
+    const { spy } = (await serverInstance.node(node).read()) as any;
+
+    t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", node)}`);
+    t.is(spy.data.options.method, RequestMethod.Get);
+  });
+});

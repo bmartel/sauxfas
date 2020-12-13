@@ -8,6 +8,7 @@ import {
 } from "./db";
 import { DocId, Empty, UuidOptions } from "./internal";
 import { Manager } from "./manager";
+import { NodeStatOptions } from "./node";
 import { ActiveTask, ReplicateOptions, Replication } from "./replication";
 import { appendPath, get, Get, post, Post, RequestMethod } from "./request";
 import { idResource, resource } from "./resource";
@@ -45,10 +46,17 @@ export interface ServerOperations {
       state: () => Pick<Manager<any>, "read" | "update">;
     };
   };
+  node: (
+    name?: string
+  ) => {
+    read: Get;
+    stats: Get;
+    system: Get;
+  };
 }
 
 export const server = (uri: string): ServerOperations => ({
-  read: () => get<Empty>(uri, {}),
+  read: () => get<any, Empty>(uri, {}),
   uuids: (options?: UuidOptions) => get(`${uri}/_uuids`, options!),
   activeTasks: () => get<Array<ActiveTask>>(`${uri}/_active_tasks`, {}),
   allDbs: (options?: AllDbOptions) =>
@@ -66,7 +74,7 @@ export const server = (uri: string): ServerOperations => ({
       create: (options: ClusterSetupOptions) => create(options),
     };
   },
-  membership: () => get<Empty>(`${uri}/_membership`, {}),
+  membership: () => get<any, Empty>(`${uri}/_membership`, {}),
   scheduler: () => {
     const schedulerUri = `${uri}/_scheduler`;
     return {
@@ -89,7 +97,7 @@ export const server = (uri: string): ServerOperations => ({
       `${uri}/_search_analyze`,
       options
     ),
-  up: () => get<Empty, { status?: "ok" }>(`${uri}/_up`, {}),
+  up: () => get<{ status?: "ok" }, Empty>(`${uri}/_up`, {}),
   reshard: () => {
     const reshardUri = `${uri}/_reshard`;
     return {
@@ -126,6 +134,18 @@ export const server = (uri: string): ServerOperations => ({
           },
         };
       },
+    };
+  },
+  node: (name: string = "_local") => {
+    const nodeUri = `${uri}/_node/${name}`;
+    return {
+      read: () => get<{ name: string }, Empty>(nodeUri, {}),
+      stats: (options: NodeStatOptions) =>
+        get<any, NodeStatOptions>(
+          `${nodeUri}/_stats/${options.group}/${options.metric}`,
+          options
+        ),
+      system: () => get<any, Empty>(`${nodeUri}/_system`, {}),
     };
   },
 });
