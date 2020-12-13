@@ -40,6 +40,11 @@ export type PostOptions<T = any> = {
 } &
   T;
 
+export type DestroyOptions<T = any> = {} & {
+  [k in keyof RequestInit]: any;
+} &
+  T;
+
 export type Get<T = any, O = any> = (
   options?: GetOptions<
     O & {
@@ -76,13 +81,13 @@ export type Post<T = any, O = any> = (
 
 export type Put<T = any, O = any> = Post<T, O>;
 
-export type Destroy<T = any> = (
-  options?: {
-    id: DocId;
-    rev?: RevId;
-  } & {
-    [k in keyof RequestInit]: any;
-  }
+export type Destroy<T = any, O = any> = (
+  options?: DestroyOptions<
+    O & {
+      id: DocId;
+      rev?: RevId;
+    }
+  >
 ) => Promise<OkResult<T> | ErrorResult>;
 
 export type FetchRequest<T = any> = (

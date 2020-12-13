@@ -2,6 +2,7 @@ import test from "ava";
 import { request, resolveRequest } from "./spec.helper";
 import { server } from "./server";
 import { AllDbOptions, DbInfoOptions } from "./db";
+import { ClusterSetupStatusOptions } from "./cluster";
 
 const baseUri = "http://localhost";
 
@@ -91,4 +92,36 @@ test("server: dbsInfo calls with data params", async (t) => {
   t.is(spy.data.uri, `${baseUri}/_dbs_info`);
   t.is(spy.data.options.method, "POST");
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
+
+test("server: clusterSetup read calls GET at /_cluster_setup", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.clusterSetup().read();
+
+  t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: clusterSetup read calls with query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts: ClusterSetupStatusOptions = {
+    query: {
+      ensure_dbs_exist: ["a", "b", "c"],
+    },
+  };
+  const { spy } = await serverInstance.clusterSetup().read(opts);
+
+  t.is(
+    spy.data.uri,
+    `${baseUri}/_cluster_setup?ensure_dbs_exist=${encodeURIComponent(
+      opts.query.ensure_dbs_exist! as any
+    )}`
+  );
+  t.is(spy.data.options.method, "GET");
 });
