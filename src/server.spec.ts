@@ -2,7 +2,11 @@ import test from "ava";
 import { request, resolveRequest } from "./spec.helper";
 import { server } from "./server";
 import { AllDbOptions, DbInfoOptions } from "./db";
-import { ClusterSetupStatusOptions } from "./cluster";
+import {
+  ClusterSetupAction,
+  ClusterSetupOptions,
+  ClusterSetupStatusOptions,
+} from "./cluster";
 
 const baseUri = "http://localhost";
 
@@ -124,4 +128,43 @@ test("server: clusterSetup read calls with query params", async (t) => {
     )}`
   );
   t.is(spy.data.options.method, "GET");
+});
+
+test("server: clusterSetup create calls POST at /_cluster_setup", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.clusterSetup().create({});
+
+  t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
+  t.is(spy.data.options.method, "POST");
+});
+
+test("server: clusterSetup create calls with query params", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  // TODO: break up allowed params based on action value
+  const opts: ClusterSetupOptions = {
+    data: {
+      action: ClusterSetupAction.AddNode,
+      bind_address: "127.0.0.1",
+      username: "foo",
+      password: "baz",
+      port: 1234,
+      node_count: 3,
+      remote_node: "1.1.1.1:5984",
+      remote_current_user: "bar",
+      remote_current_password: "baz",
+      host: "127.0.0.1",
+      ensure_dbs_exist: ["a", "b", "c"],
+    },
+  };
+  const { spy } = await serverInstance.clusterSetup().create(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
+  t.is(spy.data.options.method, "POST");
+  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
