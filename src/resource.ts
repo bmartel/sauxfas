@@ -33,7 +33,13 @@ export const idResource = <T = any>(
         ...options,
       }
     ),
-  create: ({ id = eid, data, form, method = RequestMethod.Put, ...options }) =>
+  create: ({
+    id = eid,
+    data,
+    form,
+    method = RequestMethod.Put,
+    ...options
+  } = {}) =>
     request(appendPath(uri, [idFromDoc(form || data, id)]), {
       method,
       data: data as any,
@@ -48,7 +54,7 @@ export const idResource = <T = any>(
     form,
     method = RequestMethod.Put,
     ...options
-  }) =>
+  } = {}) =>
     request(query(appendPath(uri, [idFromDoc(form || data, id)]), { rev }), {
       method,
       data: data as any,
@@ -56,8 +62,8 @@ export const idResource = <T = any>(
       raw: !!form,
       ...options,
     }),
-  destroy: ({ id = eid, data, rev, ...options }) =>
-    request(query(appendPath(uri, [idFromDoc(data, id)]), { rev }), {
+  destroy: ({ id = eid, data, rev, ...options } = {}) =>
+    request(query(appendPath(uri, [idFromDoc(data || {}, id)]), { rev }), {
       method: RequestMethod.Delete,
       ...options,
     }),

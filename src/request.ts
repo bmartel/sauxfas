@@ -104,7 +104,10 @@ export type FetchRequest<T = any> = (
 export const query = (uri: string, options = {}) => {
   const values = (Object as any)
     .entries(options)
-    .map(([key, option]: Array<any>) => `${key}=${encodeURIComponent(option)}`)
+    .map(([key, option]: Array<any>) =>
+      option === undefined ? undefined : `${key}=${encodeURIComponent(option)}`
+    )
+    .filter(Boolean)
     .join("&");
   return `${uri}${values ? `?${values}` : ""}`;
 };
