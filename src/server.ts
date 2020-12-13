@@ -6,14 +6,15 @@ import {
   DbUpdateOptions,
   DbUpdateResult,
 } from "./db";
-import { UuidOptions } from "./internal";
+import { DocId, Empty, UuidOptions } from "./internal";
 import { Manager } from "./manager";
 import { ActiveTask, ReplicateOptions, Replication } from "./replication";
 import { appendPath, get, Get, post, Post } from "./request";
-import { resource } from "./resource";
+import { idResource, resource } from "./resource";
 import {
   SchedulerDocOptions,
   SchedulerDocResult,
+  SchedulerJob,
   SchedulerJobOptions,
   SchedulerJobResult,
 } from "./scheduler";
@@ -34,6 +35,12 @@ export interface ServerOperations {
     docs: Get;
   };
   searchAnalyze: Post;
+  up: Get;
+  reshard: () => {
+    read: Get;
+    state: () => Pick<Manager<any>, "read" | "create">;
+    jobs: (id?: string) => Manager<SchedulerJob>;
+  };
 }
 
 export const server = (uri: string): ServerOperations => ({
@@ -78,4 +85,21 @@ export const server = (uri: string): ServerOperations => ({
       `${uri}/_search_analyze`,
       options
     ),
+  up: () => get<Empty, { status?: "ok" }>(`${uri}/_up`, {}),
+  reshard: () => {
+    const reshardUri = `${uri}/_reshard`;
+    return {
+      read: () => get(reshardUri, {}),
+      state: () => {
+        const { read, create } = resource(`${reshardUri}/state`);
+
+        return {
+          read,
+          create: (options) => create({ method: "PUT", ...options }),
+        };
+      },
+
+      jobs: (id?: DocId) => idResource<SchedulerJob>(`${reshardUri}/jobs`, id),
+    };
+  },
 });

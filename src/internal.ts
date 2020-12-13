@@ -43,6 +43,8 @@ export interface InternalRequestObject {
   uuid: string;
 }
 
+export type Empty = any | null;
+
 export type DocId = string;
 
 export type DocIdFunc<T> = (doc: T) => string;

@@ -1,6 +1,8 @@
 import { DocId } from "./internal";
 import { ReplicationStatus } from "./replication";
 
+export interface SchedulerJob {}
+
 export interface SchedulerJobOptions {
   query: {
     limit?: number;
