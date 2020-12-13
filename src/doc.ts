@@ -1,7 +1,7 @@
 import { attachment, Attachment, AttachmentList } from "./attachment";
 import { DocId, DocIdFunc } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
-import { Copy, request, query } from "./request";
+import { Copy, request, query, RequestMethod } from "./request";
 import { idResource } from "./resource";
 
 export type RevId = string;
@@ -66,7 +66,7 @@ export const doc = <T = any>(uri: string) => <D = T>(
         "content-type": "application/json",
         destination,
       } as any,
-      method: "COPY",
+      method: RequestMethod.Copy,
     }),
   attachment: attachment(`${uri}${eid ? `/${eid}` : ""}`),
 });

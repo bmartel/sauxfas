@@ -12,6 +12,7 @@ import { ReplicateOptions } from "./replication";
 import { SchedulerDocOptions, SchedulerJobOptions } from "./scheduler";
 import { SearchAnalyzeOptions } from "./search";
 import { ReshardJobCreateOptions } from "./reshard";
+import { RequestMethod } from "./request";
 
 const baseUri = "http://localhost";
 
@@ -27,7 +28,7 @@ test("server: read calls GET at /", async (t) => {
   const { spy } = await serverInstance.read();
 
   t.is(spy.data.uri, baseUri);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: activeTasks calls GET at /_active_tasks", async (t) => {
@@ -38,7 +39,7 @@ test("server: activeTasks calls GET at /_active_tasks", async (t) => {
   const { spy } = await serverInstance.activeTasks();
 
   t.is(spy.data.uri, `${baseUri}/_active_tasks`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: allDbs calls GET at /_all_dbs", async (t) => {
@@ -49,7 +50,7 @@ test("server: allDbs calls GET at /_all_dbs", async (t) => {
   const { spy } = await serverInstance.allDbs();
 
   t.is(spy.data.uri, `${baseUri}/_all_dbs`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: allDbs calls with query options", async (t) => {
@@ -72,7 +73,7 @@ test("server: allDbs calls with query options", async (t) => {
     spy.data.uri,
     `${baseUri}/_all_dbs?skip=${opts.query.skip}&limit=${opts.query.limit}&startkey=${opts.query.startkey}&endkey=${opts.query.endkey}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: dbsInfo calls POST at /_dbs_info", async (t) => {
@@ -83,7 +84,7 @@ test("server: dbsInfo calls POST at /_dbs_info", async (t) => {
   const { spy } = await serverInstance.dbsInfo();
 
   t.is(spy.data.uri, `${baseUri}/_dbs_info`);
-  t.is(spy.data.options.method, "POST");
+  t.is(spy.data.options.method, RequestMethod.Post);
 });
 
 test("server: dbsInfo calls with data params", async (t) => {
@@ -99,7 +100,7 @@ test("server: dbsInfo calls with data params", async (t) => {
   const { spy } = await serverInstance.dbsInfo(opts);
 
   t.is(spy.data.uri, `${baseUri}/_dbs_info`);
-  t.is(spy.data.options.method, "POST");
+  t.is(spy.data.options.method, RequestMethod.Post);
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
@@ -111,7 +112,7 @@ test("server: clusterSetup read calls GET at /_cluster_setup", async (t) => {
   const { spy } = await serverInstance.clusterSetup().read();
 
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: clusterSetup read calls with query params", async (t) => {
@@ -132,7 +133,7 @@ test("server: clusterSetup read calls with query params", async (t) => {
       opts.query.ensure_dbs_exist! as any
     )}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: clusterSetup create calls POST at /_cluster_setup", async (t) => {
@@ -143,7 +144,7 @@ test("server: clusterSetup create calls POST at /_cluster_setup", async (t) => {
   const { spy } = await serverInstance.clusterSetup().create({});
 
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
-  t.is(spy.data.options.method, "POST");
+  t.is(spy.data.options.method, RequestMethod.Post);
 });
 
 test("server: clusterSetup create calls with query params", async (t) => {
@@ -170,7 +171,7 @@ test("server: clusterSetup create calls with query params", async (t) => {
   const { spy } = await serverInstance.clusterSetup().create(opts);
 
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
-  t.is(spy.data.options.method, "POST");
+  t.is(spy.data.options.method, RequestMethod.Post);
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
@@ -182,7 +183,7 @@ test("server: dbUpdates read calls GET at /_db_updates", async (t) => {
   const { spy } = await serverInstance.dbUpdates();
 
   t.is(spy.data.uri, `${baseUri}/_db_updates`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: dbUpdates read calls with query params", async (t) => {
@@ -204,7 +205,7 @@ test("server: dbUpdates read calls with query params", async (t) => {
     spy.data.uri,
     `${baseUri}/_db_updates?feed=${opts.query.feed}&timeout=${opts.query.timeout}&heartbeat=${opts.query.heartbeat}&since=${opts.query.since}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: membership calls GET at /_membership", async (t) => {
@@ -215,7 +216,7 @@ test("server: membership calls GET at /_membership", async (t) => {
   const { spy } = await serverInstance.membership();
 
   t.is(spy.data.uri, `${baseUri}/_membership`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: uuids calls GET at /_uuids", async (t) => {
@@ -226,7 +227,7 @@ test("server: uuids calls GET at /_uuids", async (t) => {
   const { spy } = await serverInstance.uuids();
 
   t.is(spy.data.uri, `${baseUri}/_uuids`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: uuids calls with query params", async (t) => {
@@ -243,7 +244,7 @@ test("server: uuids calls with query params", async (t) => {
   const { spy } = await serverInstance.uuids(opts);
 
   t.is(spy.data.uri, `${baseUri}/_uuids?count=${opts.query.count}`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: replicate calls POST at /_replicate with data params", async (t) => {
@@ -265,7 +266,7 @@ test("server: replicate calls POST at /_replicate with data params", async (t) =
   const { spy } = await serverInstance.replicate(opts);
 
   t.is(spy.data.uri, `${baseUri}/_replicate`);
-  t.is(spy.data.options.method, "POST");
+  t.is(spy.data.options.method, RequestMethod.Post);
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
@@ -277,7 +278,7 @@ test("server: scheduler jobs calls GET at /_scheduler/_jobs", async (t) => {
   const { spy } = await serverInstance.scheduler().jobs();
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_jobs`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler jobs calls with query params", async (t) => {
@@ -298,7 +299,7 @@ test("server: scheduler jobs calls with query params", async (t) => {
     spy.data.uri,
     `${baseUri}/_scheduler/_jobs?limit=${opts.query.limit}&skip=${opts.query.skip}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls GET at /_scheduler/_docs", async (t) => {
@@ -309,7 +310,7 @@ test("server: scheduler docs calls GET at /_scheduler/_docs", async (t) => {
   const { spy } = await serverInstance.scheduler().docs();
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with query params", async (t) => {
@@ -332,7 +333,7 @@ test("server: scheduler docs calls with query params", async (t) => {
       opts.query!.skip
     }`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator", async (t) => {
@@ -347,7 +348,7 @@ test("server: scheduler docs calls with replicator", async (t) => {
   const { spy } = await serverInstance.scheduler().docs(opts);
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs/${opts.replicator}`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator with slashes in the name", async (t) => {
@@ -362,7 +363,7 @@ test("server: scheduler docs calls with replicator with slashes in the name", as
   const { spy } = await serverInstance.scheduler().docs(opts);
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs/${opts.replicator}`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator and query params", async (t) => {
@@ -386,7 +387,7 @@ test("server: scheduler docs calls with replicator and query params", async (t) 
       opts.query!.limit
     }&skip=${opts.query!.skip}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator with slashes in the name and query params", async (t) => {
@@ -410,7 +411,7 @@ test("server: scheduler docs calls with replicator with slashes in the name and 
       opts.query!.limit
     }&skip=${opts.query!.skip}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator and doc id", async (t) => {
@@ -429,7 +430,7 @@ test("server: scheduler docs calls with replicator and doc id", async (t) => {
     spy.data.uri,
     `${baseUri}/_scheduler/_docs/${opts.replicator}/${opts.id}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator with slashes in the name and doc id", async (t) => {
@@ -448,7 +449,7 @@ test("server: scheduler docs calls with replicator with slashes in the name and 
     spy.data.uri,
     `${baseUri}/_scheduler/_docs/${opts.replicator}/${opts.id}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator, doc id and query params", async (t) => {
@@ -473,7 +474,7 @@ test("server: scheduler docs calls with replicator, doc id and query params", as
       opts.query!.limit
     }&skip=${opts.query!.skip}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: scheduler docs calls with replicator with slashes in the name, doc id and query params", async (t) => {
@@ -498,7 +499,7 @@ test("server: scheduler docs calls with replicator with slashes in the name, doc
       opts.query!.limit
     }&skip=${opts.query!.skip}`
   );
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: searchAnalyze calls POST at /_search_analyze with data params", async (t) => {
@@ -515,7 +516,7 @@ test("server: searchAnalyze calls POST at /_search_analyze with data params", as
   const { spy } = await serverInstance.searchAnalyze(opts);
 
   t.is(spy.data.uri, `${baseUri}/_search_analyze`);
-  t.is(spy.data.options.method, "POST");
+  t.is(spy.data.options.method, RequestMethod.Post);
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
@@ -527,7 +528,7 @@ test("server: reshard read calls GET at /_reshard", async (t) => {
   const { spy } = await serverInstance.reshard().read();
 
   t.is(spy.data.uri, `${baseUri}/_reshard`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: reshard state read calls GET at /_reshard/state", async (t) => {
@@ -538,7 +539,7 @@ test("server: reshard state read calls GET at /_reshard/state", async (t) => {
   const { spy } = await serverInstance.reshard().state().read();
 
   t.is(spy.data.uri, `${baseUri}/_reshard/state`);
-  t.is(spy.data.options.method, "GET");
+  t.is(spy.data.options.method, RequestMethod.Get);
 });
 
 test("server: reshard state update calls PUT at /_reshard/state", async (t) => {
@@ -555,7 +556,7 @@ test("server: reshard state update calls PUT at /_reshard/state", async (t) => {
   const { spy } = await serverInstance.reshard().state().update(opts);
 
   t.is(spy.data.uri, `${baseUri}/_reshard/state`);
-  t.is(spy.data.options.method, "PUT");
+  t.is(spy.data.options.method, RequestMethod.Put);
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
@@ -578,7 +579,7 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message) => {
     const { spy } = (await serverInstance.reshard().jobs().create(opts)) as any;
 
     t.is(spy.data.uri, `${baseUri}/_reshard/jobs`);
-    t.is(spy.data.options.method, "POST");
+    t.is(spy.data.options.method, RequestMethod.Post);
     t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
   });
 });

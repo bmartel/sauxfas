@@ -169,10 +169,13 @@ export const get = <T = any, O = any>(
   uri: string,
   options: GetOptions<O>
 ): Promise<OkResult<T> | ErrorResult> =>
-  request(query(uri, options?.query), { method: "GET", ...(options || {}) });
+  request(query(uri, options?.query), {
+    method: RequestMethod.Get,
+    ...(options || {}),
+  });
 
 export const post = <T = any, O = any>(
   uri: string,
   options: PostOptions<O>
 ): Promise<OkResult<T | {}> | ErrorResult> =>
-  request(uri, { method: "POST", ...options } as any);
+  request(uri, { method: RequestMethod.Post, ...options } as any);

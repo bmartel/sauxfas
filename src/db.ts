@@ -1,7 +1,7 @@
 import { doc, DocManager } from "./doc";
 import { DocId } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
-import { get, Get, post } from "./request";
+import { get, Get, post, RequestMethod } from "./request";
 import { resource } from "./resource";
 import { DesignDoc } from "./view";
 
@@ -97,7 +97,7 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
   const { read, create, destroy } = resource(dbUri);
   return {
     read,
-    create: (options) => create({ ...options, method: "PUT" }),
+    create: (options) => create({ ...options, method: RequestMethod.Put }),
     destroy,
     allDocs: (options = {}) => get(`${dbUri}/_all_docs`, options),
     designDocs: (options = {}) => get(`${dbUri}/_design_docs`, options),
