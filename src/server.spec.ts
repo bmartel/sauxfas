@@ -531,36 +531,53 @@ test("server: reshard read calls GET at /_reshard", async (t) => {
   t.is(spy.data.options.method, RequestMethod.Get);
 });
 
-test("server: reshard state read calls GET at /_reshard/state", async (t) => {
-  const serverInstance = server(baseUri);
+resourceGroup(
+  "server::reshard",
+  "state",
+  "/_reshard/state",
+  (message, nsUri) => {
+    test(message("read calls GET"), async (t) => {
+      const serverInstance = server(baseUri);
 
-  request.callsFake(resolveRequest());
+      request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.reshard().state().read();
+      const { spy } = await serverInstance.reshard().state().read();
 
-  t.is(spy.data.uri, `${baseUri}/_reshard/state`);
-  t.is(spy.data.options.method, RequestMethod.Get);
-});
+      t.is(spy.data.uri, `${baseUri}${nsUri}`);
+      t.is(spy.data.options.method, RequestMethod.Get);
+    });
 
-test("server: reshard state update calls PUT at /_reshard/state", async (t) => {
-  const serverInstance = server(baseUri);
+    test(message("update calls PUT"), async (t) => {
+      const serverInstance = server(baseUri);
 
-  request.callsFake(resolveRequest());
+      request.callsFake(resolveRequest());
 
-  const opts = {
-    data: {
-      state: "stopped",
-      state_reason: "stopped abruptly due to external factors",
-    },
-  };
-  const { spy } = await serverInstance.reshard().state().update(opts);
+      const opts = {
+        data: {
+          state: "stopped",
+          state_reason: "stopped abruptly due to external factors",
+        },
+      };
+      const { spy } = await serverInstance.reshard().state().update(opts);
 
-  t.is(spy.data.uri, `${baseUri}/_reshard/state`);
-  t.is(spy.data.options.method, RequestMethod.Put);
-  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
-});
+      t.is(spy.data.uri, `${baseUri}${nsUri}`);
+      t.is(spy.data.options.method, RequestMethod.Put);
+      t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+    });
+  }
+);
 
-resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message) => {
+resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
+  test(message("read calls GET"), async (t) => {
+    const serverInstance = server(baseUri);
+    request.callsFake(resolveRequest());
+
+    const { spy } = (await serverInstance.reshard().jobs().read()) as any;
+
+    t.is(spy.data.uri, `${baseUri}${nsUri}`);
+    t.is(spy.data.options.method, RequestMethod.Get);
+  });
+
   test(message("create calls POST"), async (t) => {
     const serverInstance = server(baseUri);
     request.callsFake(resolveRequest());
@@ -578,7 +595,7 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message) => {
 
     const { spy } = (await serverInstance.reshard().jobs().create(opts)) as any;
 
-    t.is(spy.data.uri, `${baseUri}/_reshard/jobs`);
+    t.is(spy.data.uri, `${baseUri}${nsUri}`);
     t.is(spy.data.options.method, RequestMethod.Post);
     t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
   });

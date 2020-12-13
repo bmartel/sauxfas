@@ -21,10 +21,11 @@ export const resourceGroup = (
   namespace: string,
   text: string,
   uri: string,
-  group: (messageCreator: (message: string) => string) => void
+  group: (messageCreator: (message: string) => string, nsUri: string) => void
 ) => {
   group(
     (message: string, trailing: string = "") =>
-      `${namespace}: ${text} ${message} at ${uri} ${trailing}`
+      `${namespace}: ${text} ${message} at ${uri} ${trailing}`,
+    uri
   );
 };
