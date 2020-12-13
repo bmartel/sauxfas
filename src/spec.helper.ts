@@ -16,3 +16,15 @@ export const resolveRequest = ({ ok = true, body = undefined } = {}) => (
         new Promise((resolve) => resolve({ spy: { data: { uri, options } } })),
     } as any)
   );
+
+export const resourceGroup = (
+  namespace: string,
+  text: string,
+  uri: string,
+  group: (messageCreator: (message: string) => string) => void
+) => {
+  group(
+    (message: string, trailing: string = "") =>
+      `${namespace}: ${text} ${message} at ${uri} ${trailing}`
+  );
+};

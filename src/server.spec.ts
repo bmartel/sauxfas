@@ -1,5 +1,5 @@
 import test from "ava";
-import { request, resolveRequest } from "./spec.helper";
+import { request, resolveRequest, resourceGroup } from "./spec.helper";
 import { server } from "./server";
 import { AllDbOptions, DbFeed, DbInfoOptions, DbUpdateOptions } from "./db";
 import {
@@ -11,6 +11,7 @@ import { UuidOptions } from "./internal";
 import { ReplicateOptions } from "./replication";
 import { SchedulerDocOptions, SchedulerJobOptions } from "./scheduler";
 import { SearchAnalyzeOptions } from "./search";
+import { ReshardJobCreateOptions } from "./reshard";
 
 const baseUri = "http://localhost";
 
@@ -516,4 +517,68 @@ test("server: searchAnalyze calls POST at /_search_analyze with data params", as
   t.is(spy.data.uri, `${baseUri}/_search_analyze`);
   t.is(spy.data.options.method, "POST");
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
+
+test("server: reshard read calls GET at /_reshard", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.reshard().read();
+
+  t.is(spy.data.uri, `${baseUri}/_reshard`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: reshard state read calls GET at /_reshard/state", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const { spy } = await serverInstance.reshard().state().read();
+
+  t.is(spy.data.uri, `${baseUri}/_reshard/state`);
+  t.is(spy.data.options.method, "GET");
+});
+
+test("server: reshard state update calls PUT at /_reshard/state", async (t) => {
+  const serverInstance = server(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const opts = {
+    data: {
+      state: "stopped",
+      state_reason: "stopped abruptly due to external factors",
+    },
+  };
+  const { spy } = await serverInstance.reshard().state().update(opts);
+
+  t.is(spy.data.uri, `${baseUri}/_reshard/state`);
+  t.is(spy.data.options.method, "PUT");
+  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
+
+resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message) => {
+  test(message("create calls POST"), async (t) => {
+    const serverInstance = server(baseUri);
+    request.callsFake(resolveRequest());
+
+    const opts: ReshardJobCreateOptions = {
+      data: {
+        type: "split",
+        db: "foo",
+        node: "1.1.1.1:5984",
+        range: "aaabbb-eeefff",
+        shard: "shards/aaabbb-eeefff/baz.1607880978643",
+        error: "something went wrong",
+      },
+    };
+
+    const { spy } = (await serverInstance.reshard().jobs().create(opts)) as any;
+
+    t.is(spy.data.uri, `${baseUri}/_reshard/jobs`);
+    t.is(spy.data.options.method, "POST");
+    t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+  });
 });

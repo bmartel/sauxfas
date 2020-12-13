@@ -9,7 +9,7 @@ import {
 import { DocId, Empty, UuidOptions } from "./internal";
 import { Manager } from "./manager";
 import { ActiveTask, ReplicateOptions, Replication } from "./replication";
-import { appendPath, get, Get, post, Post } from "./request";
+import { appendPath, get, Get, post, Post, RequestMethod } from "./request";
 import { idResource, resource } from "./resource";
 import {
   SchedulerDocOptions,
@@ -38,13 +38,13 @@ export interface ServerOperations {
   up: Get;
   reshard: () => {
     read: Get;
-    state: () => Pick<Manager<any>, "read" | "create">;
-    jobs: (id?: string) => Manager<SchedulerJob>;
+    state: () => Pick<Manager<any>, "read" | "update">;
+    jobs: (id?: string) => Omit<Manager<SchedulerJob>, "update">;
   };
 }
 
 export const server = (uri: string): ServerOperations => ({
-  read: () => get(uri, {}),
+  read: () => get<Empty>(uri, {}),
   uuids: (options?: UuidOptions) => get(`${uri}/_uuids`, options!),
   activeTasks: () => get<Array<ActiveTask>>(`${uri}/_active_tasks`, {}),
   allDbs: (options?: AllDbOptions) =>
@@ -62,7 +62,7 @@ export const server = (uri: string): ServerOperations => ({
       create: (options: ClusterSetupOptions) => create(options),
     };
   },
-  membership: () => get(`${uri}/_membership`, {}),
+  membership: () => get<Empty>(`${uri}/_membership`, {}),
   scheduler: () => {
     const schedulerUri = `${uri}/_scheduler`;
     return {
@@ -91,15 +91,27 @@ export const server = (uri: string): ServerOperations => ({
     return {
       read: () => get(reshardUri, {}),
       state: () => {
-        const { read, create } = resource(`${reshardUri}/state`);
+        const { read, create: update } = resource(`${reshardUri}/state`);
 
         return {
           read,
-          create: (options) => create({ method: "PUT", ...options }),
+          update: (options) =>
+            update({ method: RequestMethod.Put, ...options }),
         };
       },
+      jobs: (id?: DocId) => {
+        const { read, create, destroy } = idResource<SchedulerJob>(
+          `${reshardUri}/jobs`,
+          id
+        );
 
-      jobs: (id?: DocId) => idResource<SchedulerJob>(`${reshardUri}/jobs`, id),
+        return {
+          read,
+          create: (options) =>
+            create({ method: RequestMethod.Post, ...options }),
+          destroy,
+        };
+      },
     };
   },
 });
