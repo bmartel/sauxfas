@@ -71,3 +71,24 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
     t.is(spy.data.options.method, RequestMethod.Delete);
   });
 });
+
+// ALL_DOCS
+// DESIGN_DOCS
+// BULK_GET
+// FIND
+// INDEX
+// EXPLAIN
+// SHARDS
+// SHARDS/DOC
+// SYNC_SHARDS
+// CHANGES
+// COMPACT
+// COMPACT/DESIGN_DOC
+// ENSURE_FULL_COMMIT
+// VIEW_CLEANUP
+// SECURITY
+// PURGE
+// PURGED_INFOS_LIMIT
+// MISSING_REVS
+// REVS_DIFF
+// REVS_LIMIT
