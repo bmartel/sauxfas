@@ -1,6 +1,7 @@
 import { doc, DocManager } from "./doc";
 import { DocId, MultipleQueryOptions } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
+import { Selector, SortBy } from "./query";
 import { get, Get, Post, post, RequestMethod } from "./request";
 import { resource } from "./resource";
 import { DesignDoc } from "./view";
@@ -78,6 +79,23 @@ export interface DbUpdateResult {
   last_seq: string;
 }
 
+export interface DbFindOptions {
+  data: {
+    selector: Selector;
+    limit?: number;
+    skip?: number;
+    sort: SortBy;
+    fields?: Array<string>;
+    use_index?: string | Array<string>;
+    r?: number;
+    bookmark?: string;
+    update?: boolean;
+    stable?: boolean;
+    descending?: boolean;
+    execution_stats?: boolean;
+  };
+}
+
 export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   doc<D = any>(id: DocId): DocManager<D>;
   designDoc<D = DesignDoc>(docid: DocId): ManagerWithMetaRead<D>;
@@ -92,6 +110,7 @@ export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   };
   bulkGet: Get;
   bulkDocs: Post;
+  find: Post;
 };
 
 export type DbResource<T = any> = (name: string) => DbManager<T>;

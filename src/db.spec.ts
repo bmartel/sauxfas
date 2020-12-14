@@ -1,7 +1,8 @@
 import test from "ava";
-import { db } from "./db";
+import { db, DbFindOptions } from "./db";
 import { DesignDocOptions, DesignDocQueryOptions } from "./doc";
 import { MultipleQueryOptions } from "./internal";
+import { ConditionOperators, SortDirection } from "./query";
 import { RequestMethod } from "./request";
 import { request, resolveRequest, resourceGroup } from "./spec.helper";
 
@@ -224,7 +225,32 @@ test("db: bulkDocs calls POST at /{db}/_bulk_docs", async (t) => {
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
-// FIND
+test("db: find calls POST at /{db}/_find", async (t) => {
+  const dbInstance = db(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const name = "foo";
+  const opts: DbFindOptions = {
+    data: {
+      selector: {
+        foo: {
+          [ConditionOperators.GreaterThan]: "bar",
+        },
+      },
+      fields: ["_id", "_rev", "foo"],
+      sort: [{ foo: SortDirection.Ascending }],
+      limit: 2,
+      skip: 0,
+      execution_stats: true,
+    },
+  };
+  const { spy } = (await dbInstance(name).find(opts)) as any;
+
+  t.is(spy.data.uri, `${baseUri}/${name}/_find`);
+  t.is(spy.data.options.method, RequestMethod.Post);
+  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
 // INDEX
 // EXPLAIN
 // SHARDS
