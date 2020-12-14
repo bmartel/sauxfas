@@ -22,6 +22,18 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
     t.is(spy.data.options.method, RequestMethod.Get);
   });
 
+  test(message("read calls HEAD with name if method set"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const name = "foo";
+    const { spy } = await dbInstance(name).read({ method: RequestMethod.Head });
+
+    t.is(spy.data.uri, `${baseUri}${nsUri.replace("{db}", name)}`);
+    t.is(spy.data.options.method, RequestMethod.Head);
+  });
+
   test(message("create calls PUT with name"), async (t) => {
     const dbInstance = db(baseUri);
 
@@ -45,5 +57,17 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
       }&partitioned=${opts.query.partitioned}`
     );
     t.is(spy.data.options.method, RequestMethod.Put);
+  });
+
+  test(message("destroy calls DELETE with name"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const name = "foo";
+    const { spy } = await dbInstance(name).destroy();
+
+    t.is(spy.data.uri, `${baseUri}${nsUri.replace("{db}", name)}`);
+    t.is(spy.data.options.method, RequestMethod.Delete);
   });
 });
