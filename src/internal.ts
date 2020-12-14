@@ -43,6 +43,12 @@ export interface InternalRequestObject {
   uuid: string;
 }
 
+export interface MultipleQueryOptions<T = any> {
+  data: {
+    queries: Array<T>;
+  };
+}
+
 export type Empty = any | null;
 
 export type DocId = string;

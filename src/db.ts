@@ -1,7 +1,7 @@
 import { doc, DocManager } from "./doc";
-import { DocId } from "./internal";
+import { DocId, MultipleQueryOptions } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
-import { get, Get, post, RequestMethod } from "./request";
+import { get, Get, Post, post, RequestMethod } from "./request";
 import { resource } from "./resource";
 import { DesignDoc } from "./view";
 
@@ -82,8 +82,16 @@ export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   doc<D = any>(id: DocId): DocManager<D>;
   designDoc<D = DesignDoc>(docid: DocId): ManagerWithMetaRead<D>;
   index(): Pick<Manager<{}>, "read" | "create">;
-  allDocs: Get;
-  designDocs: Get<Array<DesignDoc>>;
+  allDocs: () => {
+    read: Get;
+    queries: Post;
+  };
+  designDocs: () => {
+    read: Get<Array<DesignDoc>>;
+    queries: Post;
+  };
+  bulkGet: Get;
+  bulkDocs: Post;
 };
 
 export type DbResource<T = any> = (name: string) => DbManager<T>;
@@ -99,8 +107,24 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
     read,
     create: (options) => create({ ...options, method: RequestMethod.Put }),
     destroy,
-    allDocs: (options = {}) => get(`${dbUri}/_all_docs`, options),
-    designDocs: (options = {}) => get(`${dbUri}/_design_docs`, options),
+    allDocs: () => {
+      const allDocsUri = `${dbUri}/_all_docs`;
+      return {
+        read: (options = {}) => get(allDocsUri, options),
+        queries: (options: MultipleQueryOptions) =>
+          post<any, MultipleQueryOptions>(`${allDocsUri}/queries`, options),
+      };
+    },
+    designDocs: () => {
+      const designDocsUri = `${dbUri}/_design_docs`;
+      return {
+        read: (options = {}) => get(designDocsUri, options),
+        queries: (options: MultipleQueryOptions) =>
+          post<any, MultipleQueryOptions>(`${designDocsUri}/queries`, options),
+      };
+    },
+    bulkGet: (options = {}) => get(`${dbUri}/_bulk_get`, options),
+    bulkDocs: (options = {}) => post(`${dbUri}/_bulk_docs`, options),
     find: (options: any = {}) => post(`${dbUri}/_find`, options),
     index: () => resource(`${dbUri}/_index`),
     doc: doc(dbUri),

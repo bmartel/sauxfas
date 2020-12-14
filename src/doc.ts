@@ -51,6 +51,25 @@ export interface DocOptions {
   };
 }
 
+export interface DesignDocQueryOptions {
+  conflicts?: boolean;
+  descending?: boolean;
+  endkey?: string;
+  endkey_docid?: string;
+  include_docs?: boolean;
+  inclusive_end?: boolean;
+  key?: string;
+  keys?: Array<string>;
+  limit?: number;
+  skip?: number;
+  startkey?: string;
+  startkey_docid?: string;
+  update_seq?: boolean;
+}
+export interface DesignDocOptions {
+  query?: DesignDocQueryOptions;
+}
+
 export type DocManager<T = any> = Manager<Doc<T>> & {
   copy: Copy<Doc<T>>;
   attachment(file: string): ManagerWithMetaRead<Doc<Attachment>>;
