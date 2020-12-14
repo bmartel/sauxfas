@@ -8,7 +8,7 @@ export const resource = <T = any>(uri: string): Omit<Manager<T>, "update"> => ({
       method,
     }),
   create: ({ data, form, method = RequestMethod.Post, ...options }) =>
-    request(uri, {
+    request(query(uri, options?.query), {
       method,
       data: data as any,
       form: form as any,
@@ -40,13 +40,16 @@ export const idResource = <T = any>(
     method = RequestMethod.Put,
     ...options
   } = {}) =>
-    request(appendPath(uri, [idFromDoc(form || data, id)]), {
-      method,
-      data: data as any,
-      form: form as any,
-      raw: !!form,
-      ...options,
-    }),
+    request(
+      query(appendPath(uri, [idFromDoc(form || data, id)]), options.query),
+      {
+        method,
+        data: data as any,
+        form: form as any,
+        raw: !!form,
+        ...options,
+      }
+    ),
   update: ({
     id = eid,
     rev,

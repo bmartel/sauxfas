@@ -1,9 +1,49 @@
 import test from "ava";
-import {db} from "./db";
-//import { request, resolveRequest, resourceGroup } from "./spec.helper";
+import { db } from "./db";
+import { RequestMethod } from "./request";
+import { request, resolveRequest, resourceGroup } from "./spec.helper";
 
 const baseUri = "http://localhost";
 
 test("db: initializes with a base uri", (t) => {
   t.assert(db(baseUri));
+});
+
+resourceGroup("db", "", "/{db}", (message, nsUri) => {
+  test(message("read calls GET with name"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const name = "foo";
+    const { spy } = await dbInstance(name).read();
+
+    t.is(spy.data.uri, `${baseUri}${nsUri.replace("{db}", name)}`);
+    t.is(spy.data.options.method, RequestMethod.Get);
+  });
+
+  test(message("create calls PUT with name"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const name = "foo";
+
+    const opts = {
+      query: {
+        q: 8,
+        n: 3,
+        partitioned: false,
+      },
+    };
+    const { spy } = await dbInstance(name).create(opts);
+
+    t.is(
+      spy.data.uri,
+      `${baseUri}${nsUri.replace("{db}", name)}?q=${opts.query.q}&n=${
+        opts.query.n
+      }&partitioned=${opts.query.partitioned}`
+    );
+    t.is(spy.data.options.method, RequestMethod.Put);
+  });
 });
