@@ -2,7 +2,15 @@ import { doc, DocManager } from "./doc";
 import { DocId, MultipleQueryOptions } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
 import { Selector, SortBy } from "./query";
-import { get, Get, Post, post, RequestMethod } from "./request";
+import {
+  Destroy,
+  get,
+  Get,
+  Post,
+  post,
+  request,
+  RequestMethod,
+} from "./request";
 import { resource } from "./resource";
 import { DesignDoc } from "./view";
 
@@ -99,7 +107,11 @@ export interface DbFindOptions {
 export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   doc<D = any>(id: DocId): DocManager<D>;
   designDoc<D = DesignDoc>(docid: DocId): ManagerWithMetaRead<D>;
-  index(): Pick<Manager<{}>, "read" | "create">;
+  index(): {
+    read: Get;
+    create: Post;
+    destroy: Destroy;
+  };
   allDocs: () => {
     read: Get;
     queries: Post;
@@ -145,7 +157,19 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
     bulkGet: (options = {}) => get(`${dbUri}/_bulk_get`, options),
     bulkDocs: (options = {}) => post(`${dbUri}/_bulk_docs`, options),
     find: (options: any = {}) => post(`${dbUri}/_find`, options),
-    index: () => resource(`${dbUri}/_index`),
+    index: () => {
+      const dbIndexUri = `${dbUri}/_index`;
+      const { read, create } = resource(dbIndexUri);
+      return {
+        read,
+        create,
+        destroy: ({ designDoc, index, ...options } = {}) =>
+          request(`${dbIndexUri}/${designDoc}/json/${index}`, {
+            method: RequestMethod.Delete,
+            ...options,
+          }),
+      };
+    },
     doc: doc(dbUri),
     designDoc: doc<DesignDoc>(`${dbUri}/_design`),
   };

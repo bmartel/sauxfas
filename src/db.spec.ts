@@ -251,7 +251,70 @@ test("db: find calls POST at /{db}/_find", async (t) => {
   t.is(spy.data.options.method, RequestMethod.Post);
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
-// INDEX
+
+resourceGroup("db", "index", "/{db}/_index", (message, nsUri) => {
+  test(message("read calls GET"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const name = "foo";
+    const { spy } = (await dbInstance(name).index().read()) as any;
+
+    t.is(spy.data.uri, `${baseUri}/${name}/_index`);
+    t.is(spy.data.options.method, RequestMethod.Get);
+  });
+
+  test(message("read calls POST"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const opts = {
+      data: {
+        index: {
+          selector: {
+            year: {
+              $gt: 2010,
+            },
+          },
+          fields: ["_id", "_rev", "year", "title"],
+          sort: [{ year: "asc" }],
+          limit: 10,
+          skip: 0,
+        },
+        name: "foo",
+        ddoc: "bar",
+        type: "json",
+        partial_filter_selector: {},
+        partitioned: false,
+      },
+    };
+    const name = "foo";
+    const { spy } = (await dbInstance(name).index().create(opts)) as any;
+
+    t.is(spy.data.uri, `${baseUri}/${name}/_index`);
+    t.is(spy.data.options.method, RequestMethod.Post);
+    t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+  });
+
+  test(message("destroy calls DELETE"), async (t) => {
+    const dbInstance = db(baseUri);
+
+    request.callsFake(resolveRequest());
+
+    const name = "foo";
+    const ddoc = "bar";
+    const index = "baz";
+    const { spy } = (await dbInstance(name)
+      .index()
+      .destroy({ designDoc: ddoc, index })) as any;
+
+    t.is(spy.data.uri, `${baseUri}/${name}/_index/${ddoc}/json/${index}`);
+    t.is(spy.data.options.method, RequestMethod.Delete);
+  });
+});
+
 // EXPLAIN
 // SHARDS
 // SHARDS/DOC
