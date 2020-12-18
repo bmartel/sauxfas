@@ -349,7 +349,6 @@ resourceGroup("db", "index", "/{db}/_index", (message) => {
 // CHANGES
 // COMPACT
 // COMPACT/DESIGN_DOC
-// ENSURE_FULL_COMMIT
 // VIEW_CLEANUP
 // SECURITY
 // PURGE

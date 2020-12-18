@@ -3,11 +3,13 @@ import { DocId, MultipleQueryOptions } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
 import { Selector, SortBy } from "./query";
 import {
+  appendPath,
   Destroy,
   get,
   Get,
   Post,
   post,
+  Put,
   request,
   RequestMethod,
 } from "./request";
@@ -122,8 +124,30 @@ export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   };
   bulkGet: Get;
   bulkDocs: Post;
+  changes: Get;
+  compact: Post;
   find: Post;
   explain: Post;
+  shards: () => {
+    read: Get;
+    doc: (docId: string) => Get;
+    sync: Post;
+  };
+  security(): {
+    read: Get;
+    update: Put;
+  };
+  purge: Post;
+  purgedInfoLimit: () => {
+    read: Get;
+    update: Put;
+  };
+  revs: () => {
+    missing: Post;
+    diff: Post;
+    limit: Get;
+  };
+  viewCleanup: Post;
 };
 
 export type DbResource<T = any> = (name: string) => DbManager<T>;
@@ -157,7 +181,23 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
     },
     bulkGet: (options = {}) => get(`${dbUri}/_bulk_get`, options),
     bulkDocs: (options = {}) => post(`${dbUri}/_bulk_docs`, options),
+    changes: (options = {}) => get(`${dbUri}/_changes`, options),
+    viewCleanup: (options = {}) => post(`${dbUri}/_view_cleanup`, options),
+    compact: ({ designDoc, ...options } = {}) =>
+      post(appendPath(`${dbUri}/_compact`, [designDoc]), options),
     find: (options: any = {}) => post(`${dbUri}/_find`, options),
+    purge: (options: any = {}) => post(`${dbUri}/_purge`, options),
+    purgedInfoLimit: () => {
+      const purgedInfoLimitUri = `${dbUri}/_purged_infos_limit`;
+      return {
+        read: (options: any = {}) => get(purgedInfoLimitUri, options),
+        update: (options: any = {}) =>
+          request(purgedInfoLimitUri, {
+            method: RequestMethod.Put,
+            ...options,
+          }),
+      };
+    },
     index: () => {
       const dbIndexUri = `${dbUri}/_index`;
       const { read, create } = resource(dbIndexUri);
@@ -175,5 +215,30 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
       post<any, DbFindOptions>(`${dbUri}/_explain`, options),
     doc: doc(dbUri),
     designDoc: doc<DesignDoc>(`${dbUri}/_design`),
+    shards: () => {
+      const shardsUri = `${dbUri}/_shards`;
+      return {
+        read: (options: any = {}) => get(shardsUri, options),
+        doc: (docId: string) => (options: any = {}) =>
+          get(`${shardsUri}/${docId}`, options),
+        sync: (options: any = {}) => post(`${dbUri}/_sync_shards`, options),
+      };
+    },
+    revs: () => {
+      const revsUri = `${dbUri}/_revs`;
+      return {
+        diff: (options: any = {}) => post(`${revsUri}diff`, options),
+        missing: (options: any = {}) => post(`${revsUri}missing`, options),
+        limit: (options: any = {}) => get(revsUri, options),
+      };
+    },
+    security: () => {
+      const securityUri = `${dbUri}/_security`;
+      return {
+        read: (options: any = {}) => get(securityUri, options),
+        update: (options: any = {}) =>
+          request(securityUri, { method: RequestMethod.Put, ...options }),
+      };
+    },
   };
 };
