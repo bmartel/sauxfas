@@ -1,14 +1,14 @@
 import { DocId, DocIdFunc, idFromDoc } from "./internal";
 import { Manager } from "./manager";
-import { appendPath, query, request } from "./request";
+import { appendPath, query, request, RequestMethod } from "./request";
 
 export const resource = <T = any>(uri: string): Omit<Manager<T>, "update"> => ({
-  read: ({ method = "GET", ...options } = {}) =>
+  read: ({ method = RequestMethod.Get, ...options } = {}) =>
     request(query(uri, options?.query), {
       method,
     }),
-  create: ({ data, form, method = "POST", ...options }) =>
-    request(uri, {
+  create: ({ data, form, method = RequestMethod.Post, ...options }) =>
+    request(query(uri, options?.query), {
       method,
       data: data as any,
       form: form as any,
@@ -17,7 +17,7 @@ export const resource = <T = any>(uri: string): Omit<Manager<T>, "update"> => ({
     }),
   destroy: (options = {} as any) =>
     request(query(uri, (options as any).query), {
-      method: "DELETE",
+      method: RequestMethod.Delete,
     }),
 });
 
@@ -25,26 +25,49 @@ export const idResource = <T = any>(
   uri: string,
   eid?: DocId | DocIdFunc<T>
 ): Manager<T> => ({
-  read: ({ id = eid, method = "GET", ...options } = {} as any) =>
-    request(query(appendPath(uri, [idFromDoc(id)]), options.query), {
-      method,
-      ...options,
-    }),
-  create: ({ id = eid, data, method = "PUT", ...options }) =>
-    request(appendPath(uri, [idFromDoc(id)]), {
+  read: ({ id = eid, method = RequestMethod.Get, ...options } = {} as any) =>
+    request(
+      query(appendPath(uri, [idFromDoc(options.query, id)]), options.query),
+      {
+        method,
+        ...options,
+      }
+    ),
+  create: ({
+    id = eid,
+    data,
+    form,
+    method = RequestMethod.Put,
+    ...options
+  } = {}) =>
+    request(
+      query(appendPath(uri, [idFromDoc(form || data, id)]), options.query),
+      {
+        method,
+        data: data as any,
+        form: form as any,
+        raw: !!form,
+        ...options,
+      }
+    ),
+  update: ({
+    id = eid,
+    rev,
+    data,
+    form,
+    method = RequestMethod.Put,
+    ...options
+  } = {}) =>
+    request(query(appendPath(uri, [idFromDoc(form || data, id)]), { rev }), {
       method,
       data: data as any,
+      form: form as any,
+      raw: !!form,
       ...options,
     }),
-  update: ({ id = eid, rev, data, method = "PUT", ...options }) =>
-    request(query(appendPath(uri, [idFromDoc(id)]), { rev }), {
-      method,
-      data: data as any,
-      ...options,
-    }),
-  destroy: ({ id = eid, rev, ...options }) =>
-    request(query(appendPath(uri, [idFromDoc(id)]), { rev }), {
-      method: "DELETE",
+  destroy: ({ id = eid, data, rev, ...options } = {}) =>
+    request(query(appendPath(uri, [idFromDoc(data || {}, id)]), { rev }), {
+      method: RequestMethod.Delete,
       ...options,
     }),
 });

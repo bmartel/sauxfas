@@ -2,6 +2,12 @@ import { DbInfo } from "./db";
 import { RequestMethod } from "./request";
 import { Roles } from "./user";
 
+export interface UuidOptions {
+  query: {
+    count?: number;
+  };
+}
+
 export interface SecurityObject {
   admins: {
     names: Array<string>;
@@ -36,6 +42,14 @@ export interface InternalRequestObject {
   userCtx: UserContextObject;
   uuid: string;
 }
+
+export interface MultipleQueryOptions<T = any> {
+  data: {
+    queries: Array<T>;
+  };
+}
+
+export type Empty = any | null;
 
 export type DocId = string;
 

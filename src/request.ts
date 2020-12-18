@@ -40,6 +40,11 @@ export type PostOptions<T = any> = {
 } &
   T;
 
+export type DestroyOptions<T = any> = {} & {
+  [k in keyof RequestInit]: any;
+} &
+  T;
+
 export type Get<T = any, O = any> = (
   options?: GetOptions<
     O & {
@@ -65,7 +70,7 @@ export type Copy<T = any> = (options: {
 }) => Promise<OkResult<T> | ErrorResult>;
 
 export type Post<T = any, O = any> = (
-  options: PostOptions<
+  options?: PostOptions<
     O & {
       id?: DocId;
       rev?: RevId;
@@ -76,13 +81,13 @@ export type Post<T = any, O = any> = (
 
 export type Put<T = any, O = any> = Post<T, O>;
 
-export type Destroy<T = any> = (
-  options: {
-    id: DocId;
-    rev?: RevId;
-  } & {
-    [k in keyof RequestInit]: any;
-  }
+export type Destroy<T = any, O = any> = (
+  options?: DestroyOptions<
+    O & {
+      id: DocId;
+      rev?: RevId;
+    }
+  >
 ) => Promise<OkResult<T> | ErrorResult>;
 
 export type FetchRequest<T = any> = (
@@ -96,11 +101,16 @@ export type FetchRequest<T = any> = (
   }
 ) => Promise<OkResult<T> | ErrorResult>;
 
-export const query = (uri: string, options = {}) =>
-  `${uri}?${(Object as any)
+export const query = (uri: string, options = {}) => {
+  const values = (Object as any)
     .entries(options)
-    .map(([key, option]: Array<any>) => `${key}=${encodeURIComponent(option)}`)
-    .join("&")}`;
+    .map(([key, option]: Array<any>) =>
+      option === undefined ? undefined : `${key}=${encodeURIComponent(option)}`
+    )
+    .filter(Boolean)
+    .join("&");
+  return `${uri}${values ? `?${values}` : ""}`;
+};
 
 export const appendPath = (
   uri: string,
@@ -141,8 +151,8 @@ export const request: FetchRequest = (
       : data || undefined,
   }).then(async (res) => {
     const useJson =
-      (headers as any)["content-type"] === "application/json" ||
-      method !== "GET";
+      ((headers as any)["content-type"] || "application/json") ===
+        "application/json" || method !== "GET";
     if (!res.ok) {
       if (useJson) {
         const error = await res.json();
@@ -162,10 +172,13 @@ export const get = <T = any, O = any>(
   uri: string,
   options: GetOptions<O>
 ): Promise<OkResult<T> | ErrorResult> =>
-  request(query(uri, options?.query), { method: "GET", ...(options || {}) });
+  request(query(uri, options?.query), {
+    method: RequestMethod.Get,
+    ...(options || {}),
+  });
 
 export const post = <T = any, O = any>(
   uri: string,
   options: PostOptions<O>
 ): Promise<OkResult<T | {}> | ErrorResult> =>
-  request(uri, { method: "POST", ...options } as any);
+  request(uri, { method: RequestMethod.Post, ...options } as any);

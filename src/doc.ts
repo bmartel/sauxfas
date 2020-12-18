@@ -1,7 +1,7 @@
 import { attachment, Attachment, AttachmentList } from "./attachment";
 import { DocId, DocIdFunc } from "./internal";
 import { Manager, ManagerWithMetaRead } from "./manager";
-import { Copy, request, query } from "./request";
+import { Copy, request, query, RequestMethod } from "./request";
 import { idResource } from "./resource";
 
 export type RevId = string;
@@ -51,6 +51,25 @@ export interface DocOptions {
   };
 }
 
+export interface DesignDocQueryOptions {
+  conflicts?: boolean;
+  descending?: boolean;
+  endkey?: string;
+  endkey_docid?: string;
+  include_docs?: boolean;
+  inclusive_end?: boolean;
+  key?: string;
+  keys?: Array<string>;
+  limit?: number;
+  skip?: number;
+  startkey?: string;
+  startkey_docid?: string;
+  update_seq?: boolean;
+}
+export interface DesignDocOptions {
+  query?: DesignDocQueryOptions;
+}
+
 export type DocManager<T = any> = Manager<Doc<T>> & {
   copy: Copy<Doc<T>>;
   attachment(file: string): ManagerWithMetaRead<Doc<Attachment>>;
@@ -66,7 +85,7 @@ export const doc = <T = any>(uri: string) => <D = T>(
         "content-type": "application/json",
         destination,
       } as any,
-      method: "COPY",
+      method: RequestMethod.Copy,
     }),
   attachment: attachment(`${uri}${eid ? `/${eid}` : ""}`),
 });

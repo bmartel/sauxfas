@@ -12,6 +12,16 @@ export interface ReplicationHistory {
   start_time: Date | string;
 }
 
+export enum ReplicationStatus {
+  Initializing = "initializing",
+  Running = "running",
+  Completed = "completed",
+  Pending = "pending",
+  Crashing = "crashing",
+  Error = "error",
+  Failed = "failed",
+}
+
 export interface Replication {
   history: Array<ReplicationHistory>;
   replication_id_version: number;
@@ -38,8 +48,8 @@ export interface ReplicateOptions {
     target: string;
     cancel?: boolean;
     filter?: string;
-    docIds?: Array<string>;
+    doc_ids?: Array<string>;
     continuous?: boolean;
-    createTarget?: boolean;
+    create_target?: boolean;
   };
 }
