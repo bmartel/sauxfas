@@ -252,7 +252,34 @@ test("db: find calls POST at /{db}/_find", async (t) => {
   t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
 });
 
-resourceGroup("db", "index", "/{db}/_index", (message, nsUri) => {
+test("db: explain calls POST at /{db}/_explain", async (t) => {
+  const dbInstance = db(baseUri);
+
+  request.callsFake(resolveRequest());
+
+  const name = "foo";
+  const opts: DbFindOptions = {
+    data: {
+      selector: {
+        foo: {
+          [ConditionOperators.GreaterThan]: "bar",
+        },
+      },
+      fields: ["_id", "_rev", "foo"],
+      sort: [{ foo: SortDirection.Ascending }],
+      limit: 2,
+      skip: 0,
+      execution_stats: true,
+    },
+  };
+  const { spy } = (await dbInstance(name).explain(opts)) as any;
+
+  t.is(spy.data.uri, `${baseUri}/${name}/_explain`);
+  t.is(spy.data.options.method, RequestMethod.Post);
+  t.deepEqual(JSON.parse(spy.data.options.body), opts.data);
+});
+
+resourceGroup("db", "index", "/{db}/_index", (message) => {
   test(message("read calls GET"), async (t) => {
     const dbInstance = db(baseUri);
 

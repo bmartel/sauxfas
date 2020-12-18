@@ -123,6 +123,7 @@ export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   bulkGet: Get;
   bulkDocs: Post;
   find: Post;
+  explain: Post;
 };
 
 export type DbResource<T = any> = (name: string) => DbManager<T>;
@@ -170,6 +171,8 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
           }),
       };
     },
+    explain: (options: any = {}) =>
+      post<any, DbFindOptions>(`${dbUri}/_explain`, options),
     doc: doc(dbUri),
     designDoc: doc<DesignDoc>(`${dbUri}/_design`),
   };
