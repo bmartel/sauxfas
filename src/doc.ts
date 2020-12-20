@@ -1,7 +1,7 @@
 import { attachment, Attachment, AttachmentList } from "./attachment";
 import { DocId, DocIdFunc } from "./internal";
-import { Manager, ManagerWithMetaRead } from "./manager";
-import { Copy, request, query, RequestMethod } from "./request";
+import { Manager } from "./manager";
+import { Copy, request, query, RequestMethod, CopyOptions } from "./request";
 import { idResource } from "./resource";
 
 export type RevId = string;
@@ -72,14 +72,16 @@ export interface DesignDocOptions {
 
 export type DocManager<T = any> = Manager<Doc<T>> & {
   copy: Copy<Doc<T>>;
-  attachment(file: string): ManagerWithMetaRead<Doc<Attachment>>;
+  attachment(file: string): Manager<Doc<Attachment>>;
 };
 
 export const doc = <T = any>(uri: string) => <D = T>(
   eid?: DocId | DocIdFunc<D>
 ) => ({
   ...idResource<D>(uri, eid),
-  copy: ({ id = eid, rev, destination } = {} as any) =>
+  copy: <R = D>(
+    { id = eid as string, rev, destination }: CopyOptions<R> = {} as any
+  ) =>
     request(query(`${uri}/${id}`, { rev }), {
       headers: {
         "content-type": "application/json",
