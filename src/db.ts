@@ -1,6 +1,6 @@
 import { doc, DocManager } from "./doc";
 import { DocId, MultipleQueryOptions } from "./internal";
-import { Manager, ManagerWithMetaRead } from "./manager";
+import { Manager } from "./manager";
 import { Selector, SortBy } from "./query";
 import {
   appendPath,
@@ -108,7 +108,7 @@ export interface DbFindOptions {
 
 export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
   doc<D = any>(id: DocId): DocManager<D>;
-  designDoc<D = DesignDoc>(docid: DocId): ManagerWithMetaRead<D>;
+  designDoc<D = DesignDoc>(docid: DocId): Manager<D>;
   index(): {
     read: Get;
     create: Post;
@@ -174,7 +174,7 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
     designDocs: () => {
       const designDocsUri = `${dbUri}/_design_docs`;
       return {
-        read: (options = {}) => get(designDocsUri, options),
+        read: (options = {}) => get<Array<DesignDoc>>(designDocsUri, options),
         queries: (options: MultipleQueryOptions) =>
           post<any, MultipleQueryOptions>(`${designDocsUri}/queries`, options),
       };

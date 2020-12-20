@@ -1,13 +1,8 @@
 import { Destroy, Get, Head, Post, Put } from "./request";
 
 export interface Manager<T> {
-  read: Get<T>;
+  read: Get<T> | Head<T>;
   create: Put<T> | Post<T>;
-  update: Put<T>;
+  update: Put<T> | Post<T>;
   destroy: Destroy<T>;
 }
-
-export type ManagerWithMetaRead<T> = Omit<Manager<T>, "read"> & {
-  read: Get<T> | Head<T>;
-};
-

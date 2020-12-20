@@ -7,11 +7,7 @@ export type ErrorResult = {
   reason: string;
 };
 
-export type OkResult<T> =
-  | T
-  | {
-      ok: true;
-    };
+export type OkResult<T> = (T & { ok?: true }) | string | Blob;
 
 export enum RequestMethod {
   Head = "HEAD",
@@ -23,83 +19,80 @@ export enum RequestMethod {
   Copy = "COPY",
 }
 
-export type GetOptions<T = any> = {
+export type RequestOptions<T = any> = RequestInit &
+  T & {
+    id?: DocId;
+    rev?: RevId;
+  };
+
+export type GetOptions<T = any> = RequestOptions<T> & {
   query?: Record<string, any>;
-} & {
-  [k in keyof RequestInit]: any;
-} &
-  T;
+};
 
 export type HeadOptions<T = any> = GetOptions<T>;
 
-export type PostOptions<T = any> = {
+export type PostOptions<T = any> = RequestOptions<T> & {
+  query?: Record<string, any>;
   data?: Record<string, any>;
   form?: Record<string, any>;
-} & {
-  [k in keyof RequestInit]: any;
-} &
-  T;
+};
 
-export type DestroyOptions<T = any> = {} & {
-  [k in keyof RequestInit]: any;
-} &
-  T;
+export type PutOptions<T = any> = RequestOptions<T> & {
+  query?: Record<string, any>;
+  data?: Record<string, any>;
+  form?: Record<string, any>;
+};
+
+export type CopyOptions<T = any> = RequestOptions<T> & {
+  destination: string;
+};
+
+export type DestroyOptions<T = any> = RequestOptions<T>;
 
 export type Get<T = any, O = any> = (
-  options?: GetOptions<
-    O & {
-      id?: DocId;
-      rev?: RevId;
-    }
-  >
-) => Promise<OkResult<T> | ErrorResult>;
+  options?: GetOptions<O>
+) => Promise<OkResult<T>>;
 
 export type Head<T = any, O = any> = (
-  options?: HeadOptions<
-    O & {
-      id?: DocId;
-      rev?: RevId;
-    }
-  >
-) => Promise<OkResult<T> | ErrorResult>;
+  options?: HeadOptions<O>
+) => Promise<OkResult<T>>;
 
-export type Copy<T = any> = (options: {
-  id?: DocId;
-  rev: RevId;
-  destination: string;
-}) => Promise<OkResult<T> | ErrorResult>;
+export type Copy<T = any, O = any> = (
+  options: CopyOptions<O>
+) => Promise<OkResult<T | {}>>;
 
 export type Post<T = any, O = any> = (
   options?: PostOptions<
     O & {
-      id?: DocId;
-      rev?: RevId;
       data: Partial<T>;
     }
   >
-) => Promise<OkResult<T | {}> | ErrorResult>;
+) => Promise<OkResult<T | {}>>;
 
-export type Put<T = any, O = any> = Post<T, O>;
-
-export type Destroy<T = any, O = any> = (
-  options?: DestroyOptions<
+export type Put<T = any, O = any> = (
+  options?: PutOptions<
     O & {
-      id: DocId;
-      rev?: RevId;
+      data: Partial<T>;
     }
   >
-) => Promise<OkResult<T> | ErrorResult>;
+) => Promise<OkResult<T | {}>>;
+
+export type Destroy<T = any, O = any> = (
+  options?: DestroyOptions<O>
+) => Promise<OkResult<T | {}>>;
+
+export type FetchRequestOptions = RequestOptions<{
+  query?: Record<string, any>;
+  method?: string;
+  data?: Record<string, any> | any;
+  form?: Record<string, any>;
+  raw?: boolean;
+}>;
 
 export type FetchRequest<T = any> = (
   uri: string,
-  options: RequestInit & {
-    query?: Record<string, any>;
-    method?: string;
-    data?: Record<string, any> | any;
-    form?: Record<string, any>;
-    raw?: boolean;
-  }
-) => Promise<OkResult<T> | ErrorResult>;
+  options: FetchRequestOptions
+) => Promise<OkResult<T>>;
 
 export const query = (uri: string, options = {}) => {
   const values = (Object as any)
@@ -119,7 +112,7 @@ export const appendPath = (
   return [uri, ...path].filter(Boolean).join("/");
 };
 
-export const request: FetchRequest = (
+export const request = <T = any>(
   url: string,
   {
     method = "GET",
@@ -127,10 +120,13 @@ export const request: FetchRequest = (
     form = undefined,
     headers = {},
     raw = false,
-  } = {
+  }: FetchRequestOptions = {
+    method: "GET",
+    data: undefined,
+    form: undefined,
     raw: false,
   }
-) =>
+): Promise<OkResult<T>> =>
   fetch(url, {
     method,
     headers: {
@@ -157,28 +153,22 @@ export const request: FetchRequest = (
       if (useJson) {
         const error = await res.json();
         error.status = res.status;
-        throw error;
+        throw error as ErrorResult;
       }
       throw res.body;
     }
     return useJson
-      ? res.json()
+      ? (res.json() as Promise<OkResult<T>>)
       : (headers as any)["content-type"] === "text/html"
-      ? res.text()
-      : res.blob();
+      ? (res.text() as Promise<string>)
+      : (res.blob() as Promise<Blob>);
   });
 
-export const get = <T = any, O = any>(
-  uri: string,
-  options: GetOptions<O>
-): Promise<OkResult<T> | ErrorResult> =>
-  request(query(uri, options?.query), {
+export const get = <T = any, O = any>(uri: string, options?: GetOptions<O>) =>
+  request<T>(query(uri, options?.query), {
     method: RequestMethod.Get,
     ...(options || {}),
   });
 
-export const post = <T = any, O = any>(
-  uri: string,
-  options: PostOptions<O>
-): Promise<OkResult<T | {}> | ErrorResult> =>
-  request(uri, { method: RequestMethod.Post, ...options } as any);
+export const post = <T = any, O = any>(uri: string, options: PostOptions<O>) =>
+  request<T>(uri, { method: RequestMethod.Post, ...options });
