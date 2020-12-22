@@ -19,7 +19,7 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
     request.callsFake(resolveRequest());
 
     const name = "foo";
-    const { spy } = await dbInstance(name).read();
+    const { spy } = await dbInstance(name).read({}) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri.replace("{db}", name)}`);
     t.is(spy.data.options.method, RequestMethod.Get);
@@ -31,7 +31,7 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
     request.callsFake(resolveRequest());
 
     const name = "foo";
-    const { spy } = await dbInstance(name).read({ method: RequestMethod.Head });
+    const { spy } = await dbInstance(name).read({ method: RequestMethod.Head }) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri.replace("{db}", name)}`);
     t.is(spy.data.options.method, RequestMethod.Head);
@@ -52,7 +52,7 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
         batch_mode: true,
       },
     };
-    const { spy } = await dbInstance(name).create(opts);
+    const { spy } = await dbInstance(name).create(opts) as any;
 
     t.is(
       spy.data.uri,
@@ -71,7 +71,7 @@ resourceGroup("db", "", "/{db}", (message, nsUri) => {
     request.callsFake(resolveRequest());
 
     const name = "foo";
-    const { spy } = await dbInstance(name).destroy();
+    const { spy } = await dbInstance(name).destroy({}) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri.replace("{db}", name)}`);
     t.is(spy.data.options.method, RequestMethod.Delete);
@@ -286,7 +286,7 @@ resourceGroup("db", "index", "/{db}/_index", (message) => {
     request.callsFake(resolveRequest());
 
     const name = "foo";
-    const { spy } = (await dbInstance(name).index().read()) as any;
+    const { spy } = (await dbInstance(name).index().read({})) as any;
 
     t.is(spy.data.uri, `${baseUri}/${name}/_index`);
     t.is(spy.data.options.method, RequestMethod.Get);

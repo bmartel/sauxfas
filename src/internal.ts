@@ -1,12 +1,10 @@
 import { DbInfo } from "./db";
-import { RequestMethod } from "./request";
+import { RequestData, RequestMethod, RequestQuery } from "./request";
 import { Roles } from "./user";
 
-export interface UuidOptions {
-  query: {
-    count?: number;
-  };
-}
+export type UuidOptions = RequestQuery<{
+  count?: number;
+}>;
 
 export interface SecurityObject {
   admins: {
@@ -43,11 +41,9 @@ export interface InternalRequestObject {
   uuid: string;
 }
 
-export interface MultipleQueryOptions<T = any> {
-  data: {
-    queries: Array<T>;
-  };
-}
+export type MultipleQueryOptions<T = any> = RequestData<{
+  queries: Array<T>;
+}>;
 
 export type Empty = any | null;
 

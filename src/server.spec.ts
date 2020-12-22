@@ -26,7 +26,7 @@ test("server: read calls GET at /", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.read();
+  const { spy } = (await serverInstance.read({})) as any;
 
   t.is(spy.data.uri, baseUri);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -37,7 +37,7 @@ test("server: activeTasks calls GET at /_active_tasks", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.activeTasks();
+  const { spy } = (await serverInstance.activeTasks()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_active_tasks`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -48,7 +48,7 @@ test("server: allDbs calls GET at /_all_dbs", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.allDbs();
+  const { spy } = (await serverInstance.allDbs()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_all_dbs`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -68,7 +68,7 @@ test("server: allDbs calls with query options", async (t) => {
     },
   };
 
-  const { spy } = await serverInstance.allDbs(opts);
+  const { spy } = (await serverInstance.allDbs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -82,7 +82,7 @@ test("server: dbsInfo calls POST at /_dbs_info", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.dbsInfo();
+  const { spy } = (await serverInstance.dbsInfo()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_dbs_info`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -98,7 +98,7 @@ test("server: dbsInfo calls with data params", async (t) => {
       keys: ["a", "b", "c"],
     },
   };
-  const { spy } = await serverInstance.dbsInfo(opts);
+  const { spy } = (await serverInstance.dbsInfo(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_dbs_info`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -110,7 +110,7 @@ test("server: clusterSetup read calls GET at /_cluster_setup", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.clusterSetup().read();
+  const { spy } = (await serverInstance.clusterSetup().read({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -126,12 +126,12 @@ test("server: clusterSetup read calls with query params", async (t) => {
       ensure_dbs_exist: ["a", "b", "c"],
     },
   };
-  const { spy } = await serverInstance.clusterSetup().read(opts);
+  const { spy } = (await serverInstance.clusterSetup().read(opts)) as any;
 
   t.is(
     spy.data.uri,
     `${baseUri}/_cluster_setup?ensure_dbs_exist=${encodeURIComponent(
-      opts.query.ensure_dbs_exist! as any
+      opts.query!.ensure_dbs_exist! as any
     )}`
   );
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -142,7 +142,7 @@ test("server: clusterSetup create calls POST at /_cluster_setup", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.clusterSetup().create({});
+  const { spy } = (await serverInstance.clusterSetup().create({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -169,7 +169,7 @@ test("server: clusterSetup create calls with query params", async (t) => {
       ensure_dbs_exist: ["a", "b", "c"],
     },
   };
-  const { spy } = await serverInstance.clusterSetup().create(opts);
+  const { spy } = (await serverInstance.clusterSetup().create(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_cluster_setup`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -181,7 +181,7 @@ test("server: dbUpdates read calls GET at /_db_updates", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.dbUpdates();
+  const { spy } = (await serverInstance.dbUpdates()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_db_updates`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -200,7 +200,7 @@ test("server: dbUpdates read calls with query params", async (t) => {
       since: "now",
     },
   };
-  const { spy } = await serverInstance.dbUpdates(opts);
+  const { spy } = (await serverInstance.dbUpdates(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -214,7 +214,7 @@ test("server: membership calls GET at /_membership", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.membership();
+  const { spy } = (await serverInstance.membership()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_membership`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -225,7 +225,7 @@ test("server: uuids calls GET at /_uuids", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.uuids();
+  const { spy } = (await serverInstance.uuids()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_uuids`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -242,7 +242,7 @@ test("server: uuids calls with query params", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.uuids(opts);
+  const { spy } = (await serverInstance.uuids(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_uuids?count=${opts.query.count}`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -264,7 +264,7 @@ test("server: replicate calls POST at /_replicate with data params", async (t) =
       create_target: true,
     },
   };
-  const { spy } = await serverInstance.replicate(opts);
+  const { spy } = (await serverInstance.replicate(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_replicate`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -276,7 +276,7 @@ test("server: scheduler jobs calls GET at /_scheduler/_jobs", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.scheduler().jobs();
+  const { spy } = (await serverInstance.scheduler().jobs()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_jobs`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -294,7 +294,7 @@ test("server: scheduler jobs calls with query params", async (t) => {
     },
   };
 
-  const { spy } = await serverInstance.scheduler().jobs(opts);
+  const { spy } = (await serverInstance.scheduler().jobs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -308,7 +308,7 @@ test("server: scheduler docs calls GET at /_scheduler/_docs", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.scheduler().docs();
+  const { spy } = (await serverInstance.scheduler().docs()) as any;
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -326,7 +326,7 @@ test("server: scheduler docs calls with query params", async (t) => {
     },
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -346,7 +346,7 @@ test("server: scheduler docs calls with replicator", async (t) => {
     replicator: "foo",
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs/${opts.replicator}`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -361,7 +361,7 @@ test("server: scheduler docs calls with replicator with slashes in the name", as
     replicator: "foo/bar",
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs/${opts.replicator}`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -380,7 +380,7 @@ test("server: scheduler docs calls with replicator and query params", async (t) 
     },
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -404,7 +404,7 @@ test("server: scheduler docs calls with replicator with slashes in the name and 
     },
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -425,7 +425,7 @@ test("server: scheduler docs calls with replicator and doc id", async (t) => {
     id: "bar",
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -444,7 +444,7 @@ test("server: scheduler docs calls with replicator with slashes in the name and 
     id: "baz",
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -467,7 +467,7 @@ test("server: scheduler docs calls with replicator, doc id and query params", as
     },
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -492,7 +492,7 @@ test("server: scheduler docs calls with replicator with slashes in the name, doc
     },
   };
 
-  const { spy } = await serverInstance.scheduler().docs(opts);
+  const { spy } = (await serverInstance.scheduler().docs(opts)) as any;
 
   t.is(
     spy.data.uri,
@@ -514,7 +514,7 @@ test("server: searchAnalyze calls POST at /_search_analyze with data params", as
       text: "running",
     },
   };
-  const { spy } = await serverInstance.searchAnalyze(opts);
+  const { spy } = (await serverInstance.searchAnalyze(opts)) as any;
 
   t.is(spy.data.uri, `${baseUri}/_search_analyze`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -526,7 +526,7 @@ test("server: reshard read calls GET at /_reshard", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = await serverInstance.reshard().read();
+  const { spy } = (await serverInstance.reshard().read({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_reshard`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -542,7 +542,7 @@ resourceGroup(
 
       request.callsFake(resolveRequest());
 
-      const { spy } = await serverInstance.reshard().state().read();
+      const { spy } = (await serverInstance.reshard().state().read({})) as any;
 
       t.is(spy.data.uri, `${baseUri}${nsUri}`);
       t.is(spy.data.options.method, RequestMethod.Get);
@@ -559,7 +559,10 @@ resourceGroup(
           state_reason: "stopped abruptly due to external factors",
         },
       };
-      const { spy } = await serverInstance.reshard().state().update(opts);
+      const { spy } = (await serverInstance
+        .reshard()
+        .state()
+        .update(opts)) as any;
 
       t.is(spy.data.uri, `${baseUri}${nsUri}`);
       t.is(spy.data.options.method, RequestMethod.Put);
@@ -573,7 +576,7 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
     const serverInstance = server(baseUri);
     request.callsFake(resolveRequest());
 
-    const { spy } = (await serverInstance.reshard().jobs().read()) as any;
+    const { spy } = (await serverInstance.reshard().jobs().read({})) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri}`);
     t.is(spy.data.options.method, RequestMethod.Get);
@@ -585,7 +588,7 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
 
     const id = "foo";
 
-    const { spy } = (await serverInstance.reshard().jobs(id).read()) as any;
+    const { spy } = (await serverInstance.reshard().jobs(id).read({})) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri}/${id}`);
     t.is(spy.data.options.method, RequestMethod.Get);
@@ -650,7 +653,10 @@ resourceGroup("server::reshard", "jobs", "/_reshard/jobs", (message, nsUri) => {
 
     const id = "foo";
 
-    const { spy } = (await serverInstance.reshard().jobs(id).destroy()) as any;
+    const { spy } = (await serverInstance
+      .reshard()
+      .jobs(id)
+      .destroy({})) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri}/${id}`);
     t.is(spy.data.options.method, RequestMethod.Delete);
@@ -672,7 +678,7 @@ resourceGroup(
         .reshard()
         .jobs(id)
         .state()
-        .read()) as any;
+        .read({})) as any;
 
       t.is(spy.data.uri, `${baseUri}${nsUri.replace("{jobid}", id)}`);
       t.is(spy.data.options.method, RequestMethod.Get);
@@ -711,7 +717,7 @@ resourceGroup("server", "node", "/_node/{node}", (message, nsUri) => {
       const serverInstance = server(baseUri);
       request.callsFake(resolveRequest());
 
-      const { spy } = (await serverInstance.node().read()) as any;
+      const { spy } = (await serverInstance.node().read({})) as any;
 
       t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", "_local")}`);
       t.is(spy.data.options.method, RequestMethod.Get);
@@ -723,7 +729,7 @@ resourceGroup("server", "node", "/_node/{node}", (message, nsUri) => {
 
     const node = "foo";
 
-    const { spy } = (await serverInstance.node(node).read()) as any;
+    const { spy } = (await serverInstance.node(node).read({})) as any;
 
     t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", node)}`);
     t.is(spy.data.options.method, RequestMethod.Get);
@@ -739,7 +745,7 @@ resourceGroup(
       const serverInstance = server(baseUri);
       request.callsFake(resolveRequest());
 
-      const { spy } = (await serverInstance.node().config().read()) as any;
+      const { spy } = (await serverInstance.node().config().read({})) as any;
 
       t.is(spy.data.uri, `${baseUri}${nsUri.replace("{node}", "_local")}`);
       t.is(spy.data.options.method, RequestMethod.Get);
@@ -774,7 +780,7 @@ resourceGroup(
         .node()
         .config()
         .section(section)
-        .read()) as any;
+        .read({})) as any;
 
       t.is(
         spy.data.uri,
@@ -806,7 +812,7 @@ resourceGroup(
           .config()
           .section(section)
           .key(key)
-          .read()) as any;
+          .read({})) as any;
 
         t.is(
           spy.data.uri,
@@ -863,7 +869,7 @@ resourceGroup(
           .config()
           .section(section)
           .key(key)
-          .destroy()) as any;
+          .destroy({})) as any;
 
         t.is(
           spy.data.uri,

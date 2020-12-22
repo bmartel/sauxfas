@@ -1,4 +1,4 @@
-import { ClusterSetupOptions, ClusterSetupStatusOptions } from "./cluster";
+import { ClusterSetup, ClusterSetupOptions, ClusterSetupState, ClusterSetupStatusOptions } from "./cluster";
 import {
   AllDbOptions,
   DbInfo,
@@ -38,7 +38,10 @@ export interface ServerOperations {
   allDbs: Get;
   dbUpdates: Get;
   dbsInfo: Post;
-  clusterSetup: () => Pick<Manager<any>, "read" | "create">;
+  clusterSetup: () => {
+    read: Get<ClusterSetupState, ClusterSetupStatusOptions>;
+    create: Post<ClusterSetup>;
+  };
   membership: Get;
   scheduler: () => {
     jobs: Get;
@@ -95,7 +98,7 @@ export const server = (uri: string): ServerOperations => ({
   clusterSetup: () => {
     const { read, create } = resource(`${uri}/_cluster_setup`);
     return {
-      read: (options?: ClusterSetupStatusOptions) => read(options),
+      read: (options: ClusterSetupStatusOptions) => read(options),
       create: (options: ClusterSetupOptions) => create(options),
     };
   },

@@ -1,7 +1,14 @@
 import { attachment, Attachment, AttachmentList } from "./attachment";
 import { DocId, DocIdFunc } from "./internal";
 import { Manager } from "./manager";
-import { Copy, request, query, RequestMethod, CopyOptions } from "./request";
+import {
+  Copy,
+  request,
+  query,
+  RequestMethod,
+  CopyOptions,
+  MaybeRequestQuery,
+} from "./request";
 import { idResource } from "./resource";
 
 export type RevId = string;
@@ -34,22 +41,22 @@ export type Doc<T> = T & {
   _revisions?: RevisionsList;
 };
 
-export interface DocOptions {
-  query?: {
-    attachments?: boolean;
-    att_encoding_info?: boolean;
-    atts_since?: Array<string>;
-    conflicts?: boolean;
-    deleted_conflicts?: boolean;
-    latest?: boolean;
-    local_seq?: boolean;
-    meta?: boolean;
-    open_revs?: Array<string>;
-    rev?: string;
-    revs?: boolean;
-    revs_info?: boolean;
-  };
+export interface DocQueryOptions {
+  attachments?: boolean;
+  att_encoding_info?: boolean;
+  atts_since?: Array<string>;
+  conflicts?: boolean;
+  deleted_conflicts?: boolean;
+  latest?: boolean;
+  local_seq?: boolean;
+  meta?: boolean;
+  open_revs?: Array<string>;
+  rev?: string;
+  revs?: boolean;
+  revs_info?: boolean;
 }
+
+export type DocOptions = MaybeRequestQuery<DocQueryOptions>;
 
 export interface DesignDocQueryOptions {
   conflicts?: boolean;
@@ -66,22 +73,18 @@ export interface DesignDocQueryOptions {
   startkey_docid?: string;
   update_seq?: boolean;
 }
-export interface DesignDocOptions {
-  query?: DesignDocQueryOptions;
-}
+export type DesignDocOptions = MaybeRequestQuery<DesignDocQueryOptions>;
 
-export type DocManager<T = any> = Manager<Doc<T>> & {
-  copy: Copy<Doc<T>>;
+export type DocManager<T = any> = Manager<Doc<T>, DocOptions> & {
+  copy: Copy<CopyOptions, Doc<T>>;
   attachment(file: string): Manager<Doc<Attachment>>;
 };
 
 export const doc = <T = any>(uri: string) => <D = T>(
   eid?: DocId | DocIdFunc<D>
 ) => ({
-  ...idResource<D>(uri, eid),
-  copy: <R = D>(
-    { id = eid as string, rev, destination }: CopyOptions<R> = {} as any
-  ) =>
+  ...idResource<D, DocOptions>(uri, eid),
+  copy: <R = D>({ id = eid as string, rev, destination }: CopyOptions<R>) =>
     request(query(`${uri}/${id}`, { rev }), {
       headers: {
         "content-type": "application/json",

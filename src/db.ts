@@ -1,4 +1,4 @@
-import { doc, DocManager } from "./doc";
+import { DesignDocOptions,  doc, DocManager } from "./doc";
 import { DocId, MultipleQueryOptions } from "./internal";
 import { Manager } from "./manager";
 import { Selector, SortBy } from "./query";
@@ -11,7 +11,9 @@ import {
   post,
   Put,
   request,
+  RequestData,
   RequestMethod,
+  RequestQuery,
 } from "./request";
 import { resource } from "./resource";
 import { DesignDoc } from "./view";
@@ -28,57 +30,55 @@ export enum DbEvent {
   Destroyed = "deleted",
 }
 
+export interface DbCluster {
+  q: number;
+  n: number;
+  w: number;
+  r: number;
+}
+export interface DbSizes {
+  file: number;
+  external: number;
+  active: number;
+}
+
+export interface Db {
+  db_name: string;
+  update_seq: string;
+  sizes: DbSizes;
+  purge_seq: number;
+  doc_del_count: number;
+  doc_count: number;
+  disk_format_version: number;
+  compact_running: boolean;
+  cluster: DbCluster;
+  instance_start_time: string;
+}
 export interface DbInfo {
   key: string;
-  info: {
-    db_name: string;
-    update_seq: string;
-    sizes: {
-      file: number;
-      external: number;
-      active: number;
-    };
-    purge_seq: number;
-    doc_del_count: number;
-    doc_count: number;
-    disk_format_version: number;
-    compact_running: boolean;
-    cluster: {
-      q: number;
-      n: number;
-      w: number;
-      r: number;
-    };
-    instance_start_time: string;
-  };
+  info: Db;
 }
 
-export interface DbInfoOptions {
-  data: {
-    keys: Array<string>;
-  };
-}
+export type DbInfoOptions = RequestData<{
+  keys: Array<string>;
+}>;
 
-export interface AllDbOptions {
-  query: {
-    descending?: boolean;
-    endkey?: string;
-    end_key?: string;
-    limit?: number;
-    skip?: number;
-    startkey?: string;
-    start_key?: string;
-  };
-}
+export type AllDbOptions = RequestQuery<{
+  descending?: boolean;
+  endkey?: string;
+  end_key?: string;
+  limit?: number;
+  skip?: number;
+  startkey?: string;
+  start_key?: string;
+}>;
 
-export interface DbUpdateOptions {
-  query: {
-    feed?: DbFeed;
-    timeout?: number;
-    heartbeat?: number;
-    since?: string;
-  };
-}
+export type DbUpdateOptions = RequestQuery<{
+  feed?: DbFeed;
+  timeout?: number;
+  heartbeat?: number;
+  since?: string;
+}>;
 
 export interface DbUpdateResult {
   results: Array<{
@@ -89,24 +89,22 @@ export interface DbUpdateResult {
   last_seq: string;
 }
 
-export interface DbFindOptions {
-  data: {
-    selector: Selector;
-    limit?: number;
-    skip?: number;
-    sort: SortBy;
-    fields?: Array<string>;
-    use_index?: string | Array<string>;
-    r?: number;
-    bookmark?: string;
-    update?: boolean;
-    stable?: boolean;
-    descending?: boolean;
-    execution_stats?: boolean;
-  };
-}
+export type DbFindOptions = RequestData<{
+  selector: Selector;
+  limit?: number;
+  skip?: number;
+  sort: SortBy;
+  fields?: Array<string>;
+  use_index?: string | Array<string>;
+  r?: number;
+  bookmark?: string;
+  update?: boolean;
+  stable?: boolean;
+  descending?: boolean;
+  execution_stats?: boolean;
+}>;
 
-export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
+export type DbManager<T = Db> = Omit<Manager<T>, "update"> & {
   doc<D = any>(id: DocId): DocManager<D>;
   designDoc<D = DesignDoc>(docid: DocId): Manager<D>;
   index(): {
@@ -119,7 +117,7 @@ export type DbManager<T = any> = Omit<Manager<T>, "update"> & {
     queries: Post;
   };
   designDocs: () => {
-    read: Get<Array<DesignDoc>>;
+    read: Get<Array<DesignDoc>, DesignDocOptions>;
     queries: Post;
   };
   bulkGet: Get;
@@ -156,9 +154,9 @@ export interface DbOperations {
   db<T = any>(name: string): DbManager<T>;
 }
 
-export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
+export const db = <T = Db>(uri: string): DbResource<T> => (name: string) => {
   const dbUri = `${uri}/${name}`;
-  const { read, create, destroy } = resource(dbUri);
+  const { read, create, destroy } = resource<T>(dbUri);
   return {
     read,
     create: (options) => create({ ...options, method: RequestMethod.Put }),
@@ -174,7 +172,7 @@ export const db = <T = any>(uri: string): DbResource<T> => (name: string) => {
     designDocs: () => {
       const designDocsUri = `${dbUri}/_design_docs`;
       return {
-        read: (options = {}) => get<Array<DesignDoc>>(designDocsUri, options),
+        read: (options: DesignDocOptions) => get<Array<DesignDoc>>(designDocsUri, options),
         queries: (options: MultipleQueryOptions) =>
           post<any, MultipleQueryOptions>(`${designDocsUri}/queries`, options),
       };

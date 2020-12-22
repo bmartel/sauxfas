@@ -4,6 +4,7 @@ import {
   DestroyOptions,
   GetOptions,
   HeadOptions,
+  OkResult,
   PostOptions,
   PutOptions,
   query,
@@ -11,60 +12,56 @@ import {
   RequestMethod,
 } from "./request";
 
-export const resource = <T = any>(uri: string) => ({
-  read: <R = T>(
-    {
-      method = RequestMethod.Get,
-      ...options
-    }: GetOptions<R> | HeadOptions<R> = {} as any
-  ) =>
-    request<R>(query(uri, options?.query), {
-      method,
-    } as GetOptions<R> | HeadOptions<R>),
-  create: <R = T>({
+export const resource = <T = any, V = any>(uri: string) => ({
+  read: <O = V, R = T>({
+    method = RequestMethod.Get,
+    ...options
+  }: GetOptions<O> | HeadOptions<O>): Promise<OkResult<R>> =>
+    request<R>(query(uri, options.query), {
+      method: method as any,
+    } as GetOptions<O> | HeadOptions<O>) as Promise<OkResult<R>>,
+  create: <O = V, R = T>({
     data,
     form,
     method = RequestMethod.Post,
     ...options
-  }: PostOptions<R> | PutOptions<R>) =>
-    request<R>(query(uri, options?.query), {
+  }: PostOptions<O> | PutOptions<O>): Promise<OkResult<R>> =>
+    request<R>(query(uri, options.query), {
       method,
       data: data as any,
       form: form as any,
       raw: !!form,
       ...options,
-    } as PostOptions<R> | PutOptions<R>),
-  destroy: <R = T>(options: DestroyOptions<R> = {} as any) =>
-    request<R>(query(uri, (options as any).query), {
+    } as PostOptions<O> | PutOptions<O>) as Promise<OkResult<R>>,
+  destroy: <O = V, R = T>(options: DestroyOptions<O>): Promise<OkResult<R>> =>
+    request<R>(query(uri, options.query), {
       method: RequestMethod.Delete,
-    } as DestroyOptions<R>),
+    } as DestroyOptions<O>) as Promise<OkResult<R>>,
 });
 
-export const idResource = <T = any>(
+export const idResource = <T = any, V = any>(
   uri: string,
   eid?: DocId | DocIdFunc<T>
 ) => ({
-  read: <R = T>(
-    {
-      id = eid as any,
-      method = RequestMethod.Get,
-      ...options
-    }: GetOptions<R> | HeadOptions<R> = {} as any
-  ) =>
+  read: <O = V, R = T>({
+    id = eid as any,
+    method = RequestMethod.Get,
+    ...options
+  }: GetOptions<O> | HeadOptions<O>): Promise<OkResult<R>> =>
     request<R>(
       query(appendPath(uri, [idFromDoc(options.query, id)]), options.query),
       {
         method,
         ...options,
-      } as GetOptions<R> | HeadOptions<R>
-    ),
-  create: <R = T>({
+      } as GetOptions<O> | HeadOptions<O>
+    ) as Promise<OkResult<R>>,
+  create: <O = V, R = T>({
     id = eid as any,
     data,
     form,
     method = RequestMethod.Put,
     ...options
-  }: PostOptions<R> | PutOptions<R>) =>
+  }: PostOptions<O> | PutOptions<O>): Promise<OkResult<R>> =>
     request<R>(
       query(appendPath(uri, [idFromDoc(form || data, id)]), options.query),
       {
@@ -73,32 +70,30 @@ export const idResource = <T = any>(
         form: form as any,
         raw: !!form,
         ...options,
-      } as PostOptions<R> | PutOptions<R>
-    ),
-  update: <R = T>({
+      } as PostOptions<O> | PutOptions<O>
+    ) as Promise<OkResult<R>>,
+  update: <O = V, R = T>({
     id = eid as any,
     rev,
     data,
     form,
     method = RequestMethod.Put,
     ...options
-  }: PostOptions<R> | PutOptions<R>) =>
+  }: PostOptions<O> | PutOptions<O>): Promise<OkResult<R>> =>
     request<R>(query(appendPath(uri, [idFromDoc(form || data, id)]), { rev }), {
       method,
       data: data as any,
       form: form as any,
       raw: !!form,
       ...options,
-    } as PostOptions<R> | PutOptions<R>),
-  destroy: <R = T>(
-    {
-      id = eid as any,
-      rev = undefined,
-      ...options
-    }: DestroyOptions<R> = {} as any
-  ) =>
+    } as PostOptions<O> | PutOptions<O>) as Promise<OkResult<R>>,
+  destroy: <O = V, R = T>({
+    id = eid as any,
+    rev = undefined,
+    ...options
+  }: DestroyOptions<O>): Promise<OkResult<R>> =>
     request<R>(query(appendPath(uri, [idFromDoc({}, id)]), { rev }), {
       method: RequestMethod.Delete,
       ...options,
-    } as DestroyOptions<R>),
+    } as DestroyOptions<O>) as Promise<OkResult<R>>,
 });

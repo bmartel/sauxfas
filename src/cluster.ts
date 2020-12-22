@@ -1,3 +1,5 @@
+import { RequestData, MaybeRequestQuery } from "./request";
+
 export enum ClusterSetupStatus {
   ClusterDisabled = "cluster_disabled",
   ClusterEnabled = "cluster_enabled",
@@ -17,24 +19,22 @@ export interface ClusterSetupState {
   state: ClusterSetupStatus;
 }
 
-export interface ClusterSetupStatusOptions {
-  query: {
-    ensure_dbs_exist?: Array<string>;
-  };
+export type ClusterSetupStatusOptions = MaybeRequestQuery<{
+  ensure_dbs_exist?: Array<string>;
+}>;
+
+export interface ClusterSetup {
+  action: ClusterSetupAction;
+  bind_address?: string;
+  username?: string;
+  password?: string;
+  port?: number;
+  node_count?: number;
+  remote_node?: string;
+  remote_current_user?: string;
+  remote_current_password?: string;
+  host?: string;
+  ensure_dbs_exist?: Array<string>;
 }
 
-export interface ClusterSetupOptions {
-  data: {
-    action: ClusterSetupAction;
-    bind_address?: string;
-    username?: string;
-    password?: string;
-    port?: number;
-    node_count?: number;
-    remote_node?: string;
-    remote_current_user?: string;
-    remote_current_password?: string;
-    host?: string;
-    ensure_dbs_exist?: Array<string>;
-  };
-}
+export type ClusterSetupOptions = RequestData<ClusterSetup>;

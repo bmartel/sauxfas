@@ -1,8 +1,23 @@
-import { Destroy, Get, Head, Post, Put } from "./request";
+import {
+  DestroyOptions,
+  GetOptions,
+  HeadOptions,
+  OkResult,
+  PostOptions,
+  PutOptions,
+} from "./request";
 
-export interface Manager<T> {
-  read: Get<T> | Head<T>;
-  create: Put<T> | Post<T>;
-  update: Put<T> | Post<T>;
-  destroy: Destroy<T>;
+export interface Manager<T, V = any> {
+  read<O = V, R = T>(
+    options: GetOptions<O> | HeadOptions<O>
+  ): Promise<OkResult<R>>;
+  create<O = V, R = T>(
+    options: PutOptions<O> | PostOptions<O> 
+  ): Promise<OkResult<R>>;
+  update<O = V, R = T>(
+    options: PutOptions<O> | PostOptions<O> 
+  ): Promise<OkResult<R>>;
+  destroy<O = V, R = T>(
+    options: DestroyOptions<O>
+  ): Promise<OkResult<R>>;
 }

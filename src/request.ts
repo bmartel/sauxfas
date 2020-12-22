@@ -7,7 +7,13 @@ export type ErrorResult = {
   reason: string;
 };
 
-export type OkResult<T> = (T & { ok?: true }) | string | Blob;
+export type OkResult<T> = T extends string
+  ? T :
+  T extends Array<any> 
+  ? T
+  : T extends Blob 
+  ? T
+  : T & { ok?: true };
 
 export enum RequestMethod {
   Head = "HEAD",
@@ -19,35 +25,63 @@ export enum RequestMethod {
   Copy = "COPY",
 }
 
-export type RequestOptions<T = any> = RequestInit &
+export interface MaybeRequestQuery<T = Record<string, any>> {
+  query?: T;
+}
+export interface RequestQuery<T = Record<string, any>> {
+  query: T;
+}
+export interface MaybeRequestData<T = Record<string, any>> {
+  data?: T;
+}
+export interface RequestData<T = Record<string, any>> {
+  data: T;
+}
+export interface MaybeRequestForm<T = Record<string, any>> {
+  form?: T;
+}
+export interface RequestForm<T = Record<string, any>> {
+  form: T;
+}
+export type MaybeRequestMethod = {
+  method?: RequestMethod;
+};
+
+export type RequestOptions<T = any> = Omit<RequestInit, "method"> &
+  MaybeRequestMethod &
   T & {
     id?: DocId;
     rev?: RevId;
   };
 
-export type GetOptions<T = any> = RequestOptions<T> & {
-  query?: Record<string, any>;
-};
+export type GetOptions<T = any, RQ = Record<string, any>> = RequestOptions<T> &
+  MaybeRequestQuery<RQ>;
 
-export type HeadOptions<T = any> = GetOptions<T>;
+export type HeadOptions<T = any, RQ = Record<string, any>> = GetOptions<T, RQ>;
 
-export type PostOptions<T = any> = RequestOptions<T> & {
-  query?: Record<string, any>;
-  data?: Record<string, any>;
-  form?: Record<string, any>;
-};
+export type PostOptions<
+  T = any,
+  RD = Record<string, any>,
+  RQ = Record<string, any>
+> = RequestOptions<T> &
+  MaybeRequestQuery<RQ> &
+  (MaybeRequestData<RD> & MaybeRequestForm<RD>);
 
-export type PutOptions<T = any> = RequestOptions<T> & {
-  query?: Record<string, any>;
-  data?: Record<string, any>;
-  form?: Record<string, any>;
-};
+export type PutOptions<
+  T = any,
+  RD = Record<string, any>,
+  RQ = Record<string, any>
+> = PostOptions<T, RD, RQ>;
 
-export type CopyOptions<T = any> = RequestOptions<T> & {
-  destination: string;
-};
+export type CopyOptions<T = any, RQ = Record<string, any>> = RequestOptions<T> &
+  MaybeRequestQuery<RQ> & {
+    destination: string;
+  };
 
-export type DestroyOptions<T = any> = RequestOptions<T>;
+export type DestroyOptions<
+  T = any,
+  RQ = Record<string, any>
+> = RequestOptions<T> & MaybeRequestQuery<RQ>;
 
 export type Get<T = any, O = any> = (
   options?: GetOptions<O>
@@ -59,39 +93,38 @@ export type Head<T = any, O = any> = (
 
 export type Copy<T = any, O = any> = (
   options: CopyOptions<O>
-) => Promise<OkResult<T | {}>>;
+) => Promise<OkResult<T>>;
 
 export type Post<T = any, O = any> = (
   options?: PostOptions<
     O & {
-      data: Partial<T>;
+      data: T;
     }
   >
-) => Promise<OkResult<T | {}>>;
+) => Promise<OkResult<T>>;
 
 export type Put<T = any, O = any> = (
   options?: PutOptions<
     O & {
-      data: Partial<T>;
+      data: T;
     }
   >
-) => Promise<OkResult<T | {}>>;
+) => Promise<OkResult<T>>;
 
 export type Destroy<T = any, O = any> = (
   options?: DestroyOptions<O>
 ) => Promise<OkResult<T | {}>>;
 
-export type FetchRequestOptions = RequestOptions<{
-  query?: Record<string, any>;
-  method?: string;
-  data?: Record<string, any> | any;
-  form?: Record<string, any>;
-  raw?: boolean;
-}>;
+export type FetchRequestOptions = RequestOptions<
+  MaybeRequestData &
+    MaybeRequestForm & {
+      raw?: boolean;
+    }
+>;
 
 export type FetchRequest<T = any> = (
   uri: string,
-  options: FetchRequestOptions
+  options: FetchRequestOptions & MaybeRequestQuery
 ) => Promise<OkResult<T>>;
 
 export const query = (uri: string, options = {}) => {
@@ -115,13 +148,13 @@ export const appendPath = (
 export const request = <T = any>(
   url: string,
   {
-    method = "GET",
+    method = RequestMethod.Get,
     data = undefined,
     form = undefined,
     headers = {},
     raw = false,
   }: FetchRequestOptions = {
-    method: "GET",
+    method: RequestMethod.Get,
     data: undefined,
     form: undefined,
     raw: false,
@@ -137,14 +170,14 @@ export const request = <T = any>(
       credentials: "include",
       mode: "cors",
     },
-    body: form
+    body: (form
       ? new URLSearchParams(form)
       : data &&
         ((headers as any)["content-type"] || "application/json") ===
           "application/json" &&
         !raw
       ? JSON.stringify(data)
-      : data || undefined,
+      : data || undefined) as string,
   }).then(async (res) => {
     const useJson =
       ((headers as any)["content-type"] || "application/json") ===
@@ -158,10 +191,10 @@ export const request = <T = any>(
       throw res.body;
     }
     return useJson
-      ? (res.json() as Promise<OkResult<T>>)
+      ? res.json() 
       : (headers as any)["content-type"] === "text/html"
-      ? (res.text() as Promise<string>)
-      : (res.blob() as Promise<Blob>);
+      ? res.text()
+      : res.blob();
   });
 
 export const get = <T = any, O = any>(uri: string, options?: GetOptions<O>) =>
