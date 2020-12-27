@@ -1,12 +1,14 @@
-import { server, ServerOperations } from "./server";
-import { session, SessionOperations } from "./session";
-import { db, DbOperations } from "./db";
-import { users, UsersOperations } from "./user";
+import { server, ServerOperations } from './server';
+import { session, SessionOperations } from './session';
+import { db, DbOperations } from './db';
+import { users, UsersOperations } from './user';
 
 export type Relax = ServerOperations &
   SessionOperations &
   DbOperations &
   UsersOperations;
+
+export type Sdk = (admin?: boolean) => Relax;
 
 export interface Client {
   (options: {
@@ -14,7 +16,7 @@ export interface Client {
     username?: string;
     password?: string;
     ssl?: boolean;
-  }): Relax;
+  }): Sdk;
 }
 
 export const client: Client = ({
@@ -23,16 +25,18 @@ export const client: Client = ({
   password,
   ssl = false,
 }) => {
-  const scheme = ssl ? "https://" : "http://";
+  const scheme = ssl ? 'https://' : 'http://';
   const publicUri = scheme + endpoint;
   const privateUri =
     username && password
-      ? scheme + username + ":" + password + "@" + endpoint
+      ? scheme + username + ':' + password + '@' + endpoint
       : publicUri;
-  return {
-    ...server(privateUri),
-    users: users(privateUri),
-    session: session(privateUri),
-    db: db(privateUri),
-  };
+  const sdk = (uri: string) => ({
+    ...server(uri),
+    users: users(uri),
+    session: session(uri),
+    db: db(uri),
+  });
+
+  return (admin?: boolean) => sdk(admin ? privateUri : publicUri);
 };
