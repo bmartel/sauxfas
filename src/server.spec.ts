@@ -37,7 +37,7 @@ test("server: activeTasks calls GET at /_active_tasks", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.activeTasks()) as any;
+  const { spy } = (await serverInstance.activeTasks({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_active_tasks`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -48,7 +48,7 @@ test("server: allDbs calls GET at /_all_dbs", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.allDbs()) as any;
+  const { spy } = (await serverInstance.allDbs({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_all_dbs`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -82,7 +82,7 @@ test("server: dbsInfo calls POST at /_dbs_info", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.dbsInfo()) as any;
+  const { spy } = (await serverInstance.dbsInfo({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_dbs_info`);
   t.is(spy.data.options.method, RequestMethod.Post);
@@ -181,7 +181,7 @@ test("server: dbUpdates read calls GET at /_db_updates", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.dbUpdates()) as any;
+  const { spy } = (await serverInstance.dbUpdates({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_db_updates`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -214,7 +214,7 @@ test("server: membership calls GET at /_membership", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.membership()) as any;
+  const { spy } = (await serverInstance.membership({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_membership`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -225,7 +225,7 @@ test("server: uuids calls GET at /_uuids", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.uuids()) as any;
+  const { spy } = (await serverInstance.uuids({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_uuids`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -276,7 +276,7 @@ test("server: scheduler jobs calls GET at /_scheduler/_jobs", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.scheduler().jobs()) as any;
+  const { spy } = (await serverInstance.scheduler().jobs({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_jobs`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -308,7 +308,7 @@ test("server: scheduler docs calls GET at /_scheduler/_docs", async (t) => {
 
   request.callsFake(resolveRequest());
 
-  const { spy } = (await serverInstance.scheduler().docs()) as any;
+  const { spy } = (await serverInstance.scheduler().docs({})) as any;
 
   t.is(spy.data.uri, `${baseUri}/_scheduler/_docs`);
   t.is(spy.data.options.method, RequestMethod.Get);
@@ -755,7 +755,7 @@ resourceGroup(
       const serverInstance = server(baseUri);
       request.callsFake(resolveRequest());
 
-      const { spy } = (await serverInstance.node().config().reload()) as any;
+      const { spy } = (await serverInstance.node().config().reload({})) as any;
 
       t.is(
         spy.data.uri,

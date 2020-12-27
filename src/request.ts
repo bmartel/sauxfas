@@ -1,5 +1,5 @@
-import { RevId } from './doc';
-import { DocId } from './internal';
+import { RevId } from "./doc";
+import { DocId } from "./internal";
 
 export type ErrorResult = {
   status: number;
@@ -16,13 +16,13 @@ export type OkResult<T> = T extends string
   : T & { ok?: true; _token?: string };
 
 export enum RequestMethod {
-  Head = 'HEAD',
-  Get = 'GET',
-  Post = 'POST',
-  Put = 'PUT',
-  Patch = 'PATCH',
-  Delete = 'DELETE',
-  Copy = 'COPY',
+  Head = "HEAD",
+  Get = "GET",
+  Post = "POST",
+  Put = "PUT",
+  Patch = "PATCH",
+  Delete = "DELETE",
+  Copy = "COPY",
 }
 
 export interface MaybeRequestQuery<T = Record<string, any>> {
@@ -47,7 +47,7 @@ export type MaybeRequestMethod = {
   method?: RequestMethod;
 };
 
-export type RequestOptions<T = any> = Omit<RequestInit, 'method'> &
+export type RequestOptions<T = any> = Omit<RequestInit, "method"> &
   MaybeRequestMethod &
   T & {
     id?: DocId;
@@ -84,15 +84,15 @@ export type DestroyOptions<
 > = RequestOptions<T> & MaybeRequestQuery<RQ>;
 
 export type Get<T = any, O = any> = (
-  options: GetOptions<O>,
+  options: GetOptions<O>
 ) => Promise<OkResult<T>>;
 
 export type Head<T = any, O = any> = (
-  options: HeadOptions<O>,
+  options: HeadOptions<O>
 ) => Promise<OkResult<T>>;
 
 export type Copy<T = any, O = any> = (
-  options: CopyOptions<O>,
+  options: CopyOptions<O>
 ) => Promise<OkResult<T>>;
 
 export type Post<T = any, O = any> = (
@@ -100,7 +100,7 @@ export type Post<T = any, O = any> = (
     O & {
       data: T;
     }
-  >,
+  >
 ) => Promise<OkResult<T>>;
 
 export type Put<T = any, O = any> = (
@@ -108,11 +108,11 @@ export type Put<T = any, O = any> = (
     O & {
       data: T;
     }
-  >,
+  >
 ) => Promise<OkResult<T>>;
 
 export type Destroy<T = any, O = any> = (
-  options: DestroyOptions<O>,
+  options: DestroyOptions<O>
 ) => Promise<OkResult<T | {}>>;
 
 export type FetchRequestOptions = RequestOptions<
@@ -124,40 +124,45 @@ export type FetchRequestOptions = RequestOptions<
 
 export type FetchRequest<T = any> = (
   uri: string,
-  options: FetchRequestOptions & MaybeRequestQuery,
+  options: FetchRequestOptions & MaybeRequestQuery
 ) => Promise<OkResult<T>>;
 
 export const query = (uri: string, options = {}) => {
   const values = (Object as any)
     .entries(options)
     .map(([key, option]: Array<any>) =>
-      option === undefined ? undefined : `${key}=${encodeURIComponent(option)}`,
+      option === undefined ? undefined : `${key}=${encodeURIComponent(option)}`
     )
     .filter(Boolean)
-    .join('&');
-  return `${uri}${values ? `?${values}` : ''}`;
+    .join("&");
+  return `${uri}${values ? `?${values}` : ""}`;
 };
 
 export const appendPath = (
   uri: string,
-  path: Array<string | null | undefined>,
+  path: Array<string | null | undefined>
 ): string => {
-  return [uri, ...path].filter(Boolean).join('/');
+  return [uri, ...path].filter(Boolean).join("/");
 };
 
 export const unwrapResponse = async <T = any>(res: Response): Promise<T> => {
   const results = await res.json();
-  const cookieHeaders = res.headers.get('set-cookie');
-  const session = (Array.isArray(cookieHeaders)
-    ? cookieHeaders
-    : [cookieHeaders || '']
-  ).find((c) => c.indexOf('AuthSession') > -1);
+  if (res.headers && res.headers.has("set-cookie")) {
+    const cookieHeaders = res.headers.get("set-cookie");
+    const session = (Array.isArray(cookieHeaders)
+      ? cookieHeaders
+      : [cookieHeaders || ""]
+    ).find((c) => c.indexOf("AuthSession") > -1);
 
-  if (session) {
-    (results as any)._token = session.split(';')[0].replace('AuthSession=', '');
+    if (session) {
+      (results as any)._token = session
+        .split(";")[0]
+        .replace("AuthSession=", "");
+    }
   }
   return results;
 };
+
 export const request = <T = any>(
   url: string,
   {
@@ -171,30 +176,30 @@ export const request = <T = any>(
     data: undefined,
     form: undefined,
     raw: false,
-  },
+  }
 ): Promise<OkResult<T>> =>
   fetch(url, {
     method,
     headers: {
       ...headers,
-      'content-type': form
-        ? 'application/x-www-form-urlencoded; charset=utf-8'
-        : (headers as any)['content-type'] || 'application/json',
-      credentials: 'include',
-      mode: 'cors',
+      "content-type": form
+        ? "application/x-www-form-urlencoded; charset=utf-8"
+        : (headers as any)["content-type"] || "application/json",
+      credentials: "include",
+      mode: "cors",
     },
     body: (form
       ? new URLSearchParams(form)
       : data &&
-        ((headers as any)['content-type'] || 'application/json') ===
-          'application/json' &&
+        ((headers as any)["content-type"] || "application/json") ===
+          "application/json" &&
         !raw
       ? JSON.stringify(data)
       : data || undefined) as string,
   }).then(async (res) => {
     const useJson =
-      ((headers as any)['content-type'] || 'application/json') ===
-        'application/json' || method !== 'GET';
+      ((headers as any)["content-type"] || "application/json") ===
+        "application/json" || method !== "GET";
     if (!res.ok) {
       if (useJson) {
         const error = await res.json();
@@ -205,7 +210,7 @@ export const request = <T = any>(
     }
     return useJson
       ? unwrapResponse<any>(res)
-      : ['text/html', 'text/plain'].indexOf((headers as any)['content-type']) >
+      : ["text/html", "text/plain"].indexOf((headers as any)["content-type"]) >
         -1
       ? res.text()
       : res.blob();
