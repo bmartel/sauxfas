@@ -30,7 +30,7 @@
   ],
   "scripts": {
     "build": "rollup -c",
-    "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\",\"target\":\"es2015\"}' ava"
+    "test": "TS_NODE_COMPILER_OPTIONS='{\"module\":\"commonjs\",\"target\":\"es2015\"}' ava --timeout=1m"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",

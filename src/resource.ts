@@ -19,6 +19,7 @@ export const resource = <T = any, V = any>(uri: string) => ({
   }: GetOptions<O> | HeadOptions<O>): Promise<OkResult<R>> =>
     request<R>(query(uri, options.query), {
       method: method as any,
+      ...options,
     } as GetOptions<O> | HeadOptions<O>) as Promise<OkResult<R>>,
   create: <O = V, R = T>({
     data,
