@@ -1,5 +1,6 @@
-import { Manager } from "./manager";
-import { idResource } from "./resource";
+import { AuthCredentials } from './auth';
+import { Manager } from './manager';
+import { idResource } from './resource';
 
 export interface Attachment {
   content_type: string;
@@ -21,16 +22,18 @@ export interface AttachmentList {
 }
 
 export const attachment = <T = any>(
-  uri: string
+  uri: string,
+  auth?: AuthCredentials,
 ): ((file: string) => Manager<T>) => (file: string) => {
   const fileUri = `${uri}/${file}`;
-  const { read, create, update, destroy } = idResource(fileUri);
+  const { read, create, update, destroy } = idResource(fileUri, auth);
   return {
     read: (options: any = {}) =>
       read({
         ...options,
         headers: {
-          "content-type": options.contentType,
+          ...(options.headers || {}),
+          'content-type': options.contentType,
         },
       }),
     create: (options) => create({ ...options, raw: true }),
@@ -38,4 +41,3 @@ export const attachment = <T = any>(
     destroy,
   };
 };
-
