@@ -1,6 +1,7 @@
-import { attachment, Attachment, AttachmentList } from "./attachment";
-import { DocId, DocIdFunc } from "./internal";
-import { Manager } from "./manager";
+import { attachment, Attachment, AttachmentList } from './attachment';
+import { AuthCredentials, withCredentials } from './auth';
+import { DocId, DocIdFunc } from './internal';
+import { Manager } from './manager';
 import {
   Copy,
   request,
@@ -8,15 +9,15 @@ import {
   RequestMethod,
   CopyOptions,
   MaybeRequestQuery,
-} from "./request";
-import { idResource } from "./resource";
+} from './request';
+import { idResource } from './resource';
 
 export type RevId = string;
 
 export enum RevisionStatus {
-  Available = "available",
-  Deleted = "deleted",
-  Missing = "missing",
+  Available = 'available',
+  Deleted = 'deleted',
+  Missing = 'missing',
 }
 
 export interface RevInfo {
@@ -80,17 +81,23 @@ export type DocManager<T = any> = Manager<Doc<T>, DocOptions> & {
   attachment(file: string): Manager<Doc<Attachment>>;
 };
 
-export const doc = <T = any>(uri: string) => <D = T>(
-  eid?: DocId | DocIdFunc<D>
+export const doc = <T = any>(uri: string, auth?: AuthCredentials) => <D = T>(
+  eid?: DocId | DocIdFunc<D>,
 ) => ({
-  ...idResource<D, DocOptions>(uri, eid),
+  ...idResource<D, DocOptions>(uri, auth, eid),
   copy: <R = D>({ id = eid as string, rev, destination }: CopyOptions<R>) =>
-    request(query(`${uri}/${id}`, { rev }), {
-      headers: {
-        "content-type": "application/json",
-        destination,
-      } as any,
-      method: RequestMethod.Copy,
-    }),
-  attachment: attachment(`${uri}${eid ? `/${eid}` : ""}`),
+    request(
+      query(`${uri}/${id}`, { rev }),
+      withCredentials(
+        {
+          headers: {
+            'content-type': 'application/json',
+            destination,
+          },
+          method: RequestMethod.Copy,
+        },
+        auth,
+      ),
+    ),
+  attachment: attachment(`${uri}${eid ? `/${eid}` : ''}`, auth),
 });

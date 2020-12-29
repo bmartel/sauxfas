@@ -1,5 +1,18 @@
 import { stub } from "sinon";
 
+global.btoa = function btoa(str: Buffer | string): string {
+  let buffer: Buffer;
+
+  if (str instanceof Buffer) {
+    buffer = str;
+  } else {
+    buffer = Buffer.from(str.toString(), "binary");
+  }
+
+  return buffer.toString("base64");
+};
+
+export const base64 = stub(global, "btoa");
 export const request = stub(global, "fetch");
 
 export const resolveRequest = ({ ok = true, body = undefined } = {}) => (

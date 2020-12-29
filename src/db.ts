@@ -1,7 +1,8 @@
-import { DesignDocOptions,  doc, DocManager } from "./doc";
-import { DocId, MultipleQueryOptions } from "./internal";
-import { Manager } from "./manager";
-import { Selector, SortBy } from "./query";
+import { AuthCredentials, withCredentials } from './auth';
+import { DesignDocOptions, doc, DocManager } from './doc';
+import { DocId, MultipleQueryOptions } from './internal';
+import { Manager } from './manager';
+import { Selector, SortBy } from './query';
 import {
   appendPath,
   Destroy,
@@ -14,20 +15,20 @@ import {
   RequestData,
   RequestMethod,
   RequestQuery,
-} from "./request";
-import { resource } from "./resource";
-import { DesignDoc } from "./view";
+} from './request';
+import { resource } from './resource';
+import { DesignDoc } from './view';
 
 export enum DbFeed {
-  Normal = "normal",
-  Longpoll = "longpoll",
-  Continuous = "continuous",
-  Eventsource = "eventsource",
+  Normal = 'normal',
+  Longpoll = 'longpoll',
+  Continuous = 'continuous',
+  Eventsource = 'eventsource',
 }
 export enum DbEvent {
-  Created = "created",
-  Updated = "updated",
-  Destroyed = "deleted",
+  Created = 'created',
+  Updated = 'updated',
+  Destroyed = 'deleted',
 }
 
 export interface DbCluster {
@@ -104,7 +105,7 @@ export type DbFindOptions = RequestData<{
   execution_stats?: boolean;
 }>;
 
-export type DbManager<T = Db> = Omit<Manager<T>, "update"> & {
+export type DbManager<T = Db> = Omit<Manager<T>, 'update'> & {
   doc<D = any>(id: DocId): DocManager<D>;
   designDoc<D = DesignDoc>(docid: DocId): Manager<D>;
   index(): {
@@ -154,9 +155,12 @@ export interface DbOperations {
   db<T = any>(name: string): DbManager<T>;
 }
 
-export const db = <T = Db>(uri: string): DbResource<T> => (name: string) => {
+export const db = <T = Db>(
+  uri: string,
+  auth?: AuthCredentials,
+): DbResource<T> => (name: string) => {
   const dbUri = `${uri}/${name}`;
-  const { read, create, destroy } = resource<T>(dbUri);
+  const { read, create, destroy } = resource<T>(dbUri, auth);
   return {
     read,
     create: (options) => create({ ...options, method: RequestMethod.Put }),
@@ -164,41 +168,64 @@ export const db = <T = Db>(uri: string): DbResource<T> => (name: string) => {
     allDocs: () => {
       const allDocsUri = `${dbUri}/_all_docs`;
       return {
-        read: (options = {}) => get(allDocsUri, options),
+        read: (options = {}) => get(allDocsUri, withCredentials(options, auth)),
         queries: (options: MultipleQueryOptions) =>
-          post<any, MultipleQueryOptions>(`${allDocsUri}/queries`, options),
+          post<any, MultipleQueryOptions>(
+            `${allDocsUri}/queries`,
+            withCredentials(options, auth),
+          ),
       };
     },
     designDocs: () => {
       const designDocsUri = `${dbUri}/_design_docs`;
       return {
-        read: (options: DesignDocOptions) => get<Array<DesignDoc>>(designDocsUri, options),
+        read: (options: DesignDocOptions) =>
+          get<Array<DesignDoc>>(designDocsUri, withCredentials(options, auth)),
         queries: (options: MultipleQueryOptions) =>
-          post<any, MultipleQueryOptions>(`${designDocsUri}/queries`, options),
+          post<any, MultipleQueryOptions>(
+            `${designDocsUri}/queries`,
+            withCredentials(options, auth),
+          ),
       };
     },
-    bulkGet: (options = {}) => get(`${dbUri}/_bulk_get`, options),
-    bulkDocs: (options = {}) => post(`${dbUri}/_bulk_docs`, options),
-    changes: (options = {}) => get(`${dbUri}/_changes`, options),
-    viewCleanup: (options = {}) => post(`${dbUri}/_view_cleanup`, options),
+    bulkGet: (options = {}) =>
+      get(`${dbUri}/_bulk_get`, withCredentials(options, auth)),
+    bulkDocs: (options = {}) =>
+      post(`${dbUri}/_bulk_docs`, withCredentials(options, auth)),
+    changes: (options = {}) =>
+      get(`${dbUri}/_changes`, withCredentials(options, auth)),
+    viewCleanup: (options = {}) =>
+      post(`${dbUri}/_view_cleanup`, withCredentials(options, auth)),
     compact: ({ designDoc, ...options } = {}) =>
-      post(appendPath(`${dbUri}/_compact`, [designDoc]), options),
-    find: (options: any = {}) => post(`${dbUri}/_find`, options),
-    purge: (options: any = {}) => post(`${dbUri}/_purge`, options),
+      post(
+        appendPath(`${dbUri}/_compact`, [designDoc]),
+        withCredentials(options, auth),
+      ),
+    find: (options: any = {}) =>
+      post(`${dbUri}/_find`, withCredentials(options, auth)),
+    purge: (options: any = {}) =>
+      post(`${dbUri}/_purge`, withCredentials(options, auth)),
     purgedInfoLimit: () => {
       const purgedInfoLimitUri = `${dbUri}/_purged_infos_limit`;
       return {
-        read: (options: any = {}) => get(purgedInfoLimitUri, options),
+        read: (options: any = {}) =>
+          get(purgedInfoLimitUri, withCredentials(options, auth)),
         update: (options: any = {}) =>
-          request(purgedInfoLimitUri, {
-            method: RequestMethod.Put,
-            ...options,
-          }),
+          request(
+            purgedInfoLimitUri,
+            withCredentials(
+              {
+                method: RequestMethod.Put,
+                ...options,
+              },
+              auth,
+            ),
+          ),
       };
     },
     index: () => {
       const dbIndexUri = `${dbUri}/_index`;
-      const { read, create } = resource(dbIndexUri);
+      const { read, create } = resource(dbIndexUri, auth);
       return {
         read,
         create,
@@ -210,32 +237,44 @@ export const db = <T = Db>(uri: string): DbResource<T> => (name: string) => {
       };
     },
     explain: (options: any = {}) =>
-      post<any, DbFindOptions>(`${dbUri}/_explain`, options),
-    doc: doc(dbUri),
-    designDoc: doc<DesignDoc>(`${dbUri}/_design`),
+      post<any, DbFindOptions>(
+        `${dbUri}/_explain`,
+        withCredentials(options, auth),
+      ),
+    doc: doc(dbUri, auth),
+    designDoc: doc<DesignDoc>(`${dbUri}/_design`, auth),
     shards: () => {
       const shardsUri = `${dbUri}/_shards`;
       return {
-        read: (options: any = {}) => get(shardsUri, options),
+        read: (options: any = {}) =>
+          get(shardsUri, withCredentials(options, auth)),
         doc: (docId: string) => (options: any = {}) =>
-          get(`${shardsUri}/${docId}`, options),
-        sync: (options: any = {}) => post(`${dbUri}/_sync_shards`, options),
+          get(`${shardsUri}/${docId}`, withCredentials(options, auth)),
+        sync: (options: any = {}) =>
+          post(`${dbUri}/_sync_shards`, withCredentials(options, auth)),
       };
     },
     revs: () => {
       const revsUri = `${dbUri}/_revs`;
       return {
-        diff: (options: any = {}) => post(`${revsUri}diff`, options),
-        missing: (options: any = {}) => post(`${revsUri}missing`, options),
-        limit: (options: any = {}) => get(revsUri, options),
+        diff: (options: any = {}) =>
+          post(`${revsUri}diff`, withCredentials(options, auth)),
+        missing: (options: any = {}) =>
+          post(`${revsUri}missing`, withCredentials(options, auth)),
+        limit: (options: any = {}) =>
+          get(revsUri, withCredentials(options, auth)),
       };
     },
     security: () => {
       const securityUri = `${dbUri}/_security`;
       return {
-        read: (options: any = {}) => get(securityUri, options),
+        read: (options: any = {}) =>
+          get(securityUri, withCredentials(options, auth)),
         update: (options: any = {}) =>
-          request(securityUri, { method: RequestMethod.Put, ...options }),
+          request(
+            securityUri,
+            withCredentials({ method: RequestMethod.Put, ...options }, auth),
+          ),
       };
     },
   };

@@ -1,15 +1,21 @@
-import { ClusterSetup, ClusterSetupOptions, ClusterSetupState, ClusterSetupStatusOptions } from "./cluster";
+import { AuthCredentials, withCredentials } from './auth';
+import {
+  ClusterSetup,
+  ClusterSetupOptions,
+  ClusterSetupState,
+  ClusterSetupStatusOptions,
+} from './cluster';
 import {
   AllDbOptions,
   DbInfo,
   DbInfoOptions,
   DbUpdateOptions,
   DbUpdateResult,
-} from "./db";
-import { DocId, Empty, UuidOptions } from "./internal";
-import { Manager } from "./manager";
-import { NodeConfigUpdateOptions, NodeStatOptions } from "./node";
-import { ActiveTask, ReplicateOptions, Replication } from "./replication";
+} from './db';
+import { DocId, Empty, UuidOptions } from './internal';
+import { Manager } from './manager';
+import { NodeConfigUpdateOptions, NodeStatOptions } from './node';
+import { ActiveTask, ReplicateOptions, Replication } from './replication';
 import {
   appendPath,
   Destroy,
@@ -19,16 +25,16 @@ import {
   Post,
   Put,
   RequestMethod,
-} from "./request";
-import { idResource, resource } from "./resource";
+} from './request';
+import { idResource, resource } from './resource';
 import {
   SchedulerDocOptions,
   SchedulerDocResult,
   SchedulerJob,
   SchedulerJobOptions,
   SchedulerJobResult,
-} from "./scheduler";
-import { SearchAnalyzeOptions, SearchAnalyzeResult } from "./search";
+} from './scheduler';
+import { SearchAnalyzeOptions, SearchAnalyzeResult } from './search';
 
 export interface ServerOperations {
   read: Get;
@@ -51,15 +57,15 @@ export interface ServerOperations {
   up: Get;
   reshard: () => {
     read: Get;
-    state: () => Pick<Manager<any>, "read" | "update">;
+    state: () => Pick<Manager<any>, 'read' | 'update'>;
     jobs: (
-      id?: string
-    ) => Omit<Manager<SchedulerJob>, "update"> & {
-      state: () => Pick<Manager<any>, "read" | "update">;
+      id?: string,
+    ) => Omit<Manager<SchedulerJob>, 'update'> & {
+      state: () => Pick<Manager<any>, 'read' | 'update'>;
     };
   };
   node: (
-    name?: string
+    name?: string,
   ) => {
     read: Get;
     stats: Get;
@@ -68,11 +74,11 @@ export interface ServerOperations {
       read: Get;
       reload: Post;
       section: (
-        name: string
+        name: string,
       ) => {
         read: Get;
         key: (
-          name: string
+          name: string,
         ) => {
           read: Get;
           update: Put;
@@ -83,39 +89,57 @@ export interface ServerOperations {
   };
 }
 
-export const server = (uri: string): ServerOperations => ({
-  read: () => get<any, Empty>(uri, {}),
-  uuids: (options?: UuidOptions) => get(`${uri}/_uuids`, options!),
-  activeTasks: () => get<Array<ActiveTask>>(`${uri}/_active_tasks`, {}),
+export const server = (
+  uri: string,
+  auth?: AuthCredentials,
+): ServerOperations => ({
+  read: () => get<any, Empty>(uri, withCredentials({}, auth)),
+  uuids: (options?: UuidOptions) =>
+    get(`${uri}/_uuids`, withCredentials(options || {}, auth)),
+  activeTasks: () =>
+    get<Array<ActiveTask>>(`${uri}/_active_tasks`, withCredentials({}, auth)),
   allDbs: (options?: AllDbOptions) =>
-    get<Array<string>, AllDbOptions>(`${uri}/_all_dbs`, options!),
+    get<Array<string>, AllDbOptions>(
+      `${uri}/_all_dbs`,
+      withCredentials(options || {}, auth),
+    ),
   dbUpdates: (options?: DbUpdateOptions) =>
-    get<DbUpdateResult, DbUpdateOptions>(`${uri}/_db_updates`, options!),
+    get<DbUpdateResult, DbUpdateOptions>(
+      `${uri}/_db_updates`,
+      withCredentials(options || {}, auth),
+    ),
   dbsInfo: (options?: DbInfoOptions) =>
-    post<Array<DbInfo>, DbInfoOptions>(`${uri}/_dbs_info`, options!),
+    post<Array<DbInfo>, DbInfoOptions>(
+      `${uri}/_dbs_info`,
+      withCredentials(options || {}, auth),
+    ),
   replicate: (options?: ReplicateOptions) =>
-    post<Array<Replication>, ReplicateOptions>(`${uri}/_replicate`, options!),
+    post<Array<Replication>, ReplicateOptions>(
+      `${uri}/_replicate`,
+      withCredentials(options || {}, auth),
+    ),
   clusterSetup: () => {
-    const { read, create } = resource(`${uri}/_cluster_setup`);
+    const { read, create } = resource(`${uri}/_cluster_setup`, auth);
     return {
       read: (options: ClusterSetupStatusOptions) => read(options),
       create: (options: ClusterSetupOptions) => create(options),
     };
   },
-  membership: () => get<any, Empty>(`${uri}/_membership`, {}),
+  membership: () =>
+    get<any, Empty>(`${uri}/_membership`, withCredentials({}, auth)),
   scheduler: () => {
     const schedulerUri = `${uri}/_scheduler`;
     return {
       jobs: (options?: SchedulerJobOptions) =>
         get<SchedulerJobResult, SchedulerJobOptions>(
           `${schedulerUri}/_jobs`,
-          options!
+          withCredentials(options || {}, auth),
         ),
       docs: (options?: SchedulerDocOptions) => {
         const { replicator, id, ...rest } = options || {};
         return get<SchedulerDocResult, SchedulerDocOptions>(
           appendPath(`${schedulerUri}/_docs`, [replicator, id]),
-          rest!
+          withCredentials(rest || {}, auth),
         );
       },
     };
@@ -123,15 +147,16 @@ export const server = (uri: string): ServerOperations => ({
   searchAnalyze: (options: SearchAnalyzeOptions) =>
     post<SearchAnalyzeResult, SearchAnalyzeOptions>(
       `${uri}/_search_analyze`,
-      options
+      withCredentials(options, auth),
     ),
-  up: () => get<{ status?: "ok" }, Empty>(`${uri}/_up`, {}),
+  up: () =>
+    get<{ status?: 'ok' }, Empty>(`${uri}/_up`, withCredentials({}, auth)),
   reshard: () => {
     const reshardUri = `${uri}/_reshard`;
     return {
-      read: () => get(reshardUri, {}),
+      read: () => get(reshardUri, withCredentials({}, auth)),
       state: () => {
-        const { read, create: update } = resource(`${reshardUri}/state`);
+        const { read, create: update } = resource(`${reshardUri}/state`, auth);
 
         return {
           read,
@@ -142,7 +167,8 @@ export const server = (uri: string): ServerOperations => ({
       jobs: (id?: DocId) => {
         const { read, create, destroy } = idResource<SchedulerJob>(
           `${reshardUri}/jobs`,
-          id
+          auth,
+          id,
         );
 
         return {
@@ -152,7 +178,7 @@ export const server = (uri: string): ServerOperations => ({
           destroy,
           state: () => {
             const { read, create: update } = resource(
-              `${reshardUri}/jobs/${id}/state`
+              `${reshardUri}/jobs/${id}/state`,
             );
             return {
               read,
@@ -164,28 +190,33 @@ export const server = (uri: string): ServerOperations => ({
       },
     };
   },
-  node: (name: string = "_local") => {
+  node: (name: string = '_local') => {
     const nodeUri = `${uri}/_node/${name}`;
     return {
-      read: () => get<{ name: string }, Empty>(nodeUri, {}),
+      read: () =>
+        get<{ name: string }, Empty>(nodeUri, withCredentials({}, auth)),
       stats: (options: NodeStatOptions) =>
         get<any, NodeStatOptions>(
           `${nodeUri}/_stats/${options.group}/${options.metric}`,
-          options
+          withCredentials(options, auth),
         ),
-      system: () => get<any, Empty>(`${nodeUri}/_system`, {}),
+      system: () =>
+        get<any, Empty>(`${nodeUri}/_system`, withCredentials({}, auth)),
       config: () => {
         const configUri = `${nodeUri}/_config`;
         return {
-          read: () => get<any, Empty>(configUri, {}),
-          reload: () => post<any, Empty>(`${configUri}/_reload`, {}),
+          read: () => get<any, Empty>(configUri, withCredentials({}, auth)),
+          reload: () =>
+            post<any, Empty>(`${configUri}/_reload`, withCredentials({}, auth)),
           section: (section: string) => {
             const sectionUri = `${configUri}/${section}`;
             return {
-              read: () => get<any, Empty>(sectionUri, {}),
+              read: () =>
+                get<any, Empty>(sectionUri, withCredentials({}, auth)),
               key: (key: string) => {
                 const { read, create: update, destroy } = resource(
-                  `${sectionUri}/${key}`
+                  `${sectionUri}/${key}`,
+                  auth,
                 );
                 return {
                   read,
