@@ -1,4 +1,4 @@
-![Tests](https://github.com/bmartel/sauxfas/actions/workflows/test.yml/badge.svg)
+[![npm version](https://badge.fury.io/js/sauxfas.svg)](https://badge.fury.io/js/sauxfas) ![Tests](https://github.com/bmartel/sauxfas/actions/workflows/test.yml/badge.svg)
 
 
 # Sauxfas (*so·fa | sō-fə*)
