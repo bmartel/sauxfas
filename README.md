@@ -1,4 +1,5 @@
-[![npm version](https://badge.fury.io/js/sauxfas.svg)](https://badge.fury.io/js/sauxfas)
+![Tests](https://github.com/bmartel/sauxfas/actions/workflows/test.yml/badge.svg)
+
 
 # Sauxfas (*so·fa | sō-fə*)
 A lightweight fetch wrapper on the CouchDB api
